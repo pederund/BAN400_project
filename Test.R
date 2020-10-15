@@ -5,6 +5,8 @@ library(jsonlite)
 library(tidyverse)
 library(PxWebApiData)
 
+#kan også bruke frostr pakken, er kanskje enklere
+
 client_id = "a60e470c-5176-4f3f-bbcb-20e4585efd24"
 
 endpoint <- paste0("https://", client_id, "@frost.met.no/observations/v0.jsonld")
