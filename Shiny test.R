@@ -2,42 +2,116 @@
 library(tidyverse)
 library(PxWebApiData)
 library(shiny)
+library(stargazer)
 
-# API request from SSB
-ssb_data <- ApiData("https://data.ssb.no/api/v0/no/table/04475/", 
-                    ContentsCode = "ForbrukAlkoliter",
-                    Tid = TRUE, 
-                    Alkohol = "Alkohol totalt")
 
-# Storing, selecting and renaming the alcohol consumption data frame
-alk_konsum <- 
-  ssb_data$dataset %>% 
-  select(ContentsCode, Tid, value) %>% 
-  rename(
-    variable = ContentsCode,
-    year = Tid,
-    value = value
+#### COLLECTING SSB DATA ####
+
+# API request from SSB - table 04475 alcohol consumption Norway
+ssb_04475 <- 
+  ApiData(04475, 
+          ContentsCode = "ForbrukAlkoliter",
+          Tid = TRUE,
+          Alkohol = "Alkohol totalt")
+
+# extracting data (total alcohol liters in thousands) and creating data frame
+alc_liters <-
+  ssb_04475$dataset %>% 
+  select(Tid, value) %>% 
+  transmute(
+    year = str_split(Tid, "K"),
+    quart = as.integer(map(year, `[`, 2)), # subset position 2 of every obs.
+    year = as.integer(map(year, `[`, 1)),
+    k_liters = value
   )
 
-# Splitting up the years and quarters
-alk_konsum$year <- str_split(alk_konsum$year, "K")
 
-for(i in 1:length(alk_konsum$year)){
+# API request from SSB - table 08460 grensehandel
+ssb_08460 <- 
+  ApiData(08460,
+          ContentsCode = "Grenseh",
+          Tid = TRUE)
+
+# extracting data (total spent in MNOK) and creating data frame
+shopping <-
+  ssb_08460$dataset %>% 
+  select(Tid, value) %>%
+  transmute(
+    year = str_split(Tid, "K"),
+    quart = as.integer(map(year, `[`, 2)), 
+    year = as.integer(map(year, `[`, 1)),
+    m_nok = value
+  )
+
+# API request from SSB - table 10594 number of unemployed people
+ssb_10594 <-
+  ApiData(10594,
+          ContentsCode = "Registrerte1",
+          Region = "Hele landet",
+          Kjonn = "Begge kjønn",
+          Tid = TRUE)
+
+
+# creating function to convert month to quarter
+
+month_to_quarter <- function(x){
   
-  alk_konsum$q[i] <- alk_konsum$year[[i]][2]
-  alk_konsum$year[i] <- alk_konsum$year[[i]][1]
+  if(x %in% c(1:3)){
+    return(1)
+  } else if(x %in% c(4:6)){
+    return(2)
+  } else if(x %in% c(7:9)){
+    return(3)
+  } else if(x %in% c(10:12)){
+    return(4)
+  }
   
 }
 
-# format year and quarter as numeric and relocate columns
-alk_konsum$year <- unlist(alk_konsum$year)
-alk_konsum$year <- as.numeric(alk_konsum$year)
-alk_konsum$q <- as.numeric(alk_konsum$q)
-alk_konsum <- relocate(alk_konsum, q, .after = year)
+# extracting data (monthly unemployment rates) and creating data frame
+
+unemployment <-
+  ssb_10594$dataset %>% 
+  select(Tid, value) %>% 
+  transmute(
+    year = str_split(Tid, "M"),
+    month = as.integer(map(year, `[`, 2)), 
+    year = as.integer(map(year, `[`, 1)),
+    quart = as.integer(map(month, month_to_quarter)),
+    unemployed = value
+  ) %>% 
+  group_by(year, quart) %>% 
+  transmute(
+    year = year,
+    quart = quart,
+    q_unemployed = sum(unemployed)
+  ) %>% 
+  ungroup() %>% 
+  unique()
+
+
+#### TESTING REGRESSION ####
+
+# merging the three data frames above
+reg_df <-
+  alc_liters %>% 
+  filter(!year %in% c(2002:2003)) %>% 
+  inner_join(shopping, by = c("year", "quart")) %>% 
+  inner_join(unemployment, by = c("year", "quart"))
+
+
+# checking for correlation
+cor_mat <- cor(reg_df)
+
+# running a simple regression
+result <- lm(k_liters ~ m_nok + q_unemployed, data = reg_df)
+stargazer(result, type = "text")
 
 
 
-#### BUILDING APP ####
+#### BUILDING TEST APP ####
+
+# defining user interface and input variables
 ui <- fluidPage(
   titlePanel('Norwegian alcohol consumption'),
   
@@ -58,13 +132,14 @@ ui <- fluidPage(
     
     mainPanel(plotOutput(outputId = 'hist'))))
 
+# defining what to output
 server <- function(input, output) {
   
   output$hist <- renderPlot({
-    alk_konsum %>%
-      filter(q == input$quart) %>%
+    alc_liters %>%
+      filter(quart == input$quart) %>%
       filter(year %in% c(input$years[1]:input$years[2])) %>%
-      ggplot(aes(x = year, y = value)) +
+      ggplot(aes(x = year, y = k_liters)) +
       geom_point(col = 'red', size = 2) +
       geom_line(col = 'blue') +
       theme_classic() +
@@ -78,6 +153,5 @@ server <- function(input, output) {
   
 }
 
+# run app
 shinyApp(ui = ui, server = server)
-
-#
