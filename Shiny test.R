@@ -70,6 +70,8 @@ month_to_quarter <- function(x){
 
 # extracting data (monthly unemployment rates) and creating data frame
 
+#Ser at fra 2016 og opp får vi bare tall for ett kvartal. Er det pga at dataene kommer slik
+#eller har vi kodet noe feil?
 unemployment <-
   ssb_10594$dataset %>% 
   select(Tid, value) %>% 
@@ -89,22 +91,52 @@ unemployment <-
   ungroup() %>% 
   unique()
 
+#API request from SSB - table 09660, divorces per year
+ssb_09660 <- 
+  ApiData(09660,
+          ContentsCode = "Skillsmisser",
+          Tid = TRUE)
+
+divorces <- #Verdiene er kun per år, ikke per kvartal som ellers. Må kanskje finne en løsning
+  ssb_09660$dataset %>% 
+  select(Tid, value) %>% 
+  filter(value != 0)
+
+#API request from SSB - table 12439, absence from work due to illness
+ssb_12439 <- 
+  ApiData(12439,
+          ContentsCode = "SykefravProsent",
+          Tid = TRUE,
+          Sykefraver2 = "Alt",
+          Kjonn = "0")
+
+absence_illness <- 
+  ssb_12439$dataset %>% 
+  select(Tid, value) %>%
+  transmute(
+    year = str_split(Tid, "K"),
+    quart = as.integer(map(year, `[`, 2)), 
+    year = as.integer(map(year, `[`, 1)),
+    perc_absence = value)
+
 
 #### TESTING REGRESSION ####
+
 
 # merging the three data frames above
 reg_df <-
   alc_liters %>% 
   filter(!year %in% c(2002:2003)) %>% 
   inner_join(shopping, by = c("year", "quart")) %>% 
-  inner_join(unemployment, by = c("year", "quart"))
+  inner_join(unemployment, by = c("year", "quart")) %>% 
+  inner_join(absence_illness, by = c("year", "quart"))
 
 
 # checking for correlation
 cor_mat <- cor(reg_df)
 
 # running a simple regression
-result <- lm(k_liters ~ m_nok + q_unemployed, data = reg_df)
+result <- lm(k_liters ~ m_nok + q_unemployed + perc_absence, data = reg_df)
 stargazer(result, type = "text")
 
 
