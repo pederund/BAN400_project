@@ -91,17 +91,6 @@ unemployment <-
   ungroup() %>% 
   unique()
 
-#API request from SSB - table 09660, divorces per year
-ssb_09660 <- 
-  ApiData(09660,
-          ContentsCode = "Skillsmisser",
-          Tid = TRUE)
-
-divorces <- #Verdiene er kun per år, ikke per kvartal som ellers. Må kanskje finne en løsning
-  ssb_09660$dataset %>% 
-  select(Tid, value) %>% 
-  filter(value != 0)
-
 #API request from SSB - table 12439, absence from work due to illness
 ssb_12439 <- 
   ApiData(12439,
@@ -118,7 +107,6 @@ absence_illness <-
     quart = as.integer(map(year, `[`, 2)), 
     year = as.integer(map(year, `[`, 1)),
     perc_absence = value)
-
 
 #### TESTING REGRESSION ####
 
