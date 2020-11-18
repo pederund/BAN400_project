@@ -6,9 +6,14 @@ avinor_url <- "https://flydata.avinor.no/XmlFeed.asp?airport=OSL&TimeFrom=24&Tim
 data_url <- getURL(avinor_url)
 data <- xmlParse(data_url)
 
-status_url <- "https://flydata.avinor.no/flightStatuses.asp?"
-statuscode_url <- getURL(status_url)
-status_codes <- xmlParse(statuscode_url)
+status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?")
+status_codes <- xmlParse(status_url)
+
+airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?")
+airport_names <- xmlParse(airports_url)
+
+airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp")
+airline_names <- xmlParse(airlines_url)
 
 df_status <- XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
   mutate(uniqueID = lag(uniqueID)) %>% 
@@ -18,5 +23,18 @@ flight_df <-
   cbind(xmlToDataFrame(getNodeSet(data, "//flight")),
         XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
 
+status_codes_df <- 
+  XML:::xmlAttrsToDataFrame(getNodeSet(status_codes, "//flightStatus"))
+
 full_df <- flight_df %>% 
-  full_join(df_status)
+  full_join(df_status) %>% 
+  select(-status)
+
+full_df <- full_df %>% 
+  full_join(status_codes_df)
+
+airport_df <- 
+  XML:::xmlAttrsToDataFrame(getNodeSet(airport_names, "//airportName"))
+
+airlines_df <- 
+  XML:::xmlAttrsToDataFrame(getNodeSet(airline_names, "//airlineName"))
