@@ -10,11 +10,13 @@ status_url <- "https://flydata.avinor.no/flightStatuses.asp?"
 statuscode_url <- getURL(status_url)
 status_codes <- xmlParse(statuscode_url)
 
-#df <- xmlToDataFrame(getNodeSet(data, "//flight"))
-
-df_status <- XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status")))
-#df_testing <- XML:::xmlAttrsToDataFrame(getNodeSet(data, "//status"))
+df_status <- XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
+  mutate(uniqueID = lag(uniqueID)) %>% 
+  filter(!is.na(uniqueID))
 
 flight_df <- 
   cbind(xmlToDataFrame(getNodeSet(data, "//flight")),
         XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
+
+full_df <- flight_df %>% 
+  full_join(df_status)
