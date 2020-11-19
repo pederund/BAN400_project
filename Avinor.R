@@ -74,4 +74,7 @@ full_df <- full_df %>%
          status_text_NO = statusTextNo) %>% 
   #Joiner inn airline navn og airport navn
   left_join(airlines_df, by = c("airline_code" = "code")) %>% 
-  left_join(airport_df, by = c("airport_code" = "code"))
+  left_join(airport_df, by = c("airport_code" = "code")) %>% 
+  relocate(airline_name, .after = airline_code) %>% 
+  relocate(airport_name, .after = airport_code) %>% 
+  relocate(c(status_text_NO, status_text_EN), .after = status_code)
