@@ -4,11 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(chron)
 
-avinor_airports <- c("OSL", "BGO", "KRS", "VDB", "KSU", "MOL", "HOV", "AES", "ANX",
-                     "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
-                     "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
-                     "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
-                     "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
+avinor_airports <- c("OSL", "BGO", "TRD", "SVG", "TOS", "AES", "BOO")
 
 final_df <- data.frame() # lager tom df
 
@@ -89,15 +85,19 @@ for(i in 1:length(avinor_airports)) {
     relocate(airline_name, .after = airline_code) %>% 
     relocate(airport_name, .after = airport_code) %>% 
     relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
-    mutate(from_airport = avinor_airports[i]) #adder flyplassnavn som egen kolonne
+    mutate(from_airport = avinor_airports[i]) %>% #adder flyplassnavn som egen kolonne
+    select(airline_code, airline_name, airport_code, airport_name, arr_dep,
+            delayed, dom_int, flight_id, from_airport, gate, scheduled_date, scheduled_time,
+            status_code, status_text_EN, status_text_NO, uniqueID, updated_date, updated_time) %>% 
+    filter(!is.na(uniqueID))
   
   
   final_df <- rbind(full_df, final_df) #binder sammen hele iterasjonen (full_df for flyplass X med final_df)
 }
 
 # sjekk her for forskjeller, den stopper opp allerede på iterasjon nr 2 (Bergen)
-ls(final_df) # for Oslo
-ls(full_df) # for Bergen
+#ls(final_df) # for Oslo
+#ls(full_df) # for Bergen
 
 
 # virket ikke som disse var nødvendige for loopen
