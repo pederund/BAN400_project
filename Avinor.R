@@ -1,6 +1,8 @@
 library(XML)
 library(RCurl)
 library(tidyverse)
+library(lubridate)
+library(chron)
 
 avinor_url <- "https://flydata.avinor.no/XmlFeed.asp?airport=OSL&TimeFrom=24&TimeTo=24"
 data_url <- getURL(avinor_url)
@@ -38,3 +40,27 @@ airport_df <-
 
 airlines_df <- 
   XML:::xmlAttrsToDataFrame(getNodeSet(airline_names, "//airlineName"))
+
+full_df <- full_df %>% 
+  #Rydder opp i tidskolonnene
+  mutate(schedule_time = ymd_hms(schedule_time,
+                                 tz = ("UTC")),
+         schedule_time = force_tz(with_tz(schedule_time,
+                                 tz = "CET")),
+         time = ymd_hms(time,
+                        tz = "UTC"),
+         time = force_tz(with_tz(time,
+                                 tz = "CET"))) %>% 
+  #Skiller dato og tid fra hverandre
+  separate(schedule_time,
+           into = c("scheduled_date", "scheduled_time"),
+           sep = " ") %>% 
+  separate(time,
+           into = c("updated_date", "updated_time"),
+           sep = " ") %>% 
+  #Etter kolonnene ble separert, er de nå character. Konverterer derfor tilbake
+  #til tid og datoformat
+  mutate(scheduled_time = times(scheduled_time),
+         updated_time = times(updated_time),
+         scheduled_date = ymd(scheduled_date),
+         updated_date = ymd(updated_date))
