@@ -78,3 +78,12 @@ full_df <- full_df %>%
   relocate(airline_name, .after = airline_code) %>% 
   relocate(airport_name, .after = airport_code) %>% 
   relocate(c(status_text_NO, status_text_EN), .after = status_code)
+
+avinor_airports <- c("OSL", "BGO", "KRS", "VDB", "KSU", "MOL", "HOV", "AES", "ANX",
+                     "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
+                     "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
+                     "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
+                     "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
+avinor_df <- data.frame(avinor_airports) %>% 
+  rename(code = avinor_airports) %>% 
+  left_join(airport_df)
