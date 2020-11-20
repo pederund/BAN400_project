@@ -4,7 +4,7 @@ library(tidyverse)
 library(lubridate)
 library(chron)
 
-avinor_url <- "https://flydata.avinor.no/XmlFeed.asp?airport=OSL"
+avinor_url <- "https://flydata.avinor.no/XmlFeed.asp?airport=VAW"
 data_url <- getURL(avinor_url)
 data <- xmlParse(data_url)
 

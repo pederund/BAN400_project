@@ -28,7 +28,7 @@ new_function <- function(data_url, origin){
     filter(!is.na(uniqueID))
   
   flight_df <- 
-    cbind(xmlToDataFrame(getNodeSet(data, "//flight")),
+    bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
           XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
   full_df <- flight_df %>% 
     full_join(df_status) %>% 
@@ -94,6 +94,8 @@ avinor_airports <- c("OSL", "BGO", "KRS", "VDB", "KSU", "MOL", "HOV", "AES", "AN
                      "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
                      "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
 
+our_airports <- c("OSL", "BGO", "SVG", "TRD", "BOO", "KRS", "TOS", "AES")
+
 status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?")
 airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?")
 airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp")
@@ -108,13 +110,11 @@ avinor_df <- data.frame(avinor_airports) %>%
   left_join(airport_df)
 
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
-avinor_urls <- paste0(avinor_base_url, avinor_airports)
+avinor_urls <- paste0(avinor_base_url, our_airports)
 origin <- stringr::str_sub(avinor_urls, -3, -1)
 data_url <- map(avinor_urls, getURL)
 
-for (i in length(avinor_airports)){
+for (i in 1:length(our_airports)){
   full_df <- new_function(data_url[[i]], origin[i])
   final_update()
 }
-
-
