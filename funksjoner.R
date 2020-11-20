@@ -73,7 +73,8 @@ new_function <- function(data_url, origin){
     relocate(airline_name, .after = airline_code) %>% 
     relocate(airport_name, .after = airport_code) %>% 
     relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
-    mutate(origin = origin)
+    mutate(origin = origin) %>% 
+    filter(!is.na(uniqueID))
 }
 
 final_update <- function(){
@@ -108,8 +109,12 @@ avinor_df <- data.frame(avinor_airports) %>%
 
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports)
-data_url <- map(avinor_urls, getURL)
 origin <- stringr::str_sub(avinor_urls, -3, -1)
-full_df <- new_function(data_url[[1]], origin[1])
+data_url <- map(avinor_urls, getURL)
 
-final_update()
+for (i in length(avinor_airports)){
+  full_df <- new_function(data_url[[i]], origin[i])
+  final_update()
+}
+
+
