@@ -19,7 +19,7 @@ tes_func <- function(status_url, airports_url, airlines_url){
   return(list_dfs)
 }
 
-new_function <- function(data_url){
+new_function <- function(data_url, origin){
   data <- xmlParse(data_url)
   
   df_status <- 
@@ -72,7 +72,8 @@ new_function <- function(data_url){
     #Relocater noen kolonner for å gjøre dataframen mer leselig
     relocate(airline_name, .after = airline_code) %>% 
     relocate(airport_name, .after = airport_code) %>% 
-    relocate(c(status_text_NO, status_text_EN), .after = status_code)
+    relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
+    mutate(origin = origin)
 }
 
 final_update <- function(){
@@ -86,6 +87,15 @@ if (!exists("final_df")){
   final_df <- data.frame()
 }
 
+avinor_airports <- c("OSL", "BGO", "KRS", "VDB", "KSU", "MOL", "HOV", "AES", "ANX",
+                     "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
+                     "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
+                     "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
+                     "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
+avinor_df <- data.frame(avinor_airports) %>% 
+  rename(code = avinor_airports) %>% 
+  left_join(airport_df)
+
 status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?")
 airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?")
 airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp")
@@ -95,9 +105,10 @@ status_codes_df <- test_dfs$status_codes_df
 airport_df <- test_dfs$airport_df
 airlines_df <- test_dfs$airlines_df
 
-avinor_url <- "https://flydata.avinor.no/XmlFeed.asp?airport=FRO"
+avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
+avinor_urls <- paste0(avinor_base_url, avinor_airports)
 data_url <- getURL(avinor_url)
-
-full_df <- new_function(data_url)
+origin <- stringr::str_sub(avinor_urls, -3, -1)
+full_df <- new_function(data_url, origin)
 
 final_update()
