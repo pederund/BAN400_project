@@ -1,3 +1,9 @@
+library(XML)
+library(RCurl)
+library(tidyverse)
+library(lubridate)
+library(chron)
+
 tes_func <- function(status_url, airports_url, airlines_url){
   status_codes <- xmlParse(status_url)
   airport_names <- xmlParse(airports_url)
@@ -34,51 +40,91 @@ new_function <- function(data_url, origin){
     flight_df <- 
       bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
                 XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
-    full_df <- flight_df %>% 
-      full_join(df_status) %>% 
-      select(-status)
     
-    full_df <- full_df %>% 
-      full_join(status_codes_df)
+  if("status" %in% names(test_df)){
+      full_df <- flight_df %>% 
+        full_join(df_status)
+      
+      full_df <- full_df %>% 
+        full_join(status_codes_df) 
+    }
+  else{
+      full_df <- flight_df %>% 
+        mutate(origin = origin,
+               schedule_time = ymd_hms(schedule_time,
+                                              tz = ("UTC")),
+               schedule_time = force_tz(with_tz(schedule_time,
+                                                       tz = "CET"))) %>% 
+        rename(airline_code = airline,
+               airport_code = airport)
+      return(full_df)
+    }
     
     full_df <- full_df %>% 
       #Rydder opp i tidskolonnene
       mutate(schedule_time = ymd_hms(schedule_time,
                                      tz = ("UTC")),
              schedule_time = force_tz(with_tz(schedule_time,
-                                              tz = "CET")),
-             time = ymd_hms(time,
-                            tz = "UTC"),
-             time = force_tz(with_tz(time,
-                                     tz = "CET"))) %>% 
+                                              tz = "CET"))) 
+    if("status" %in% names(test_df)){
+      full_df <- full_df %>% 
+        mutate(
+          time = ymd_hms(time,
+                         tz = "UTC"),
+          time = force_tz(with_tz(time,
+                                  tz = "CET"))
+        )
+    } 
+    full_df <- full_df %>% 
       #Skiller dato og tid fra hverandre
       separate(schedule_time,
                into = c("scheduled_date", "scheduled_time"),
-               sep = " ") %>% 
-      separate(time,
-               into = c("updated_date", "updated_time"),
-               sep = " ") %>% 
-      #Etter kolonnene ble separert, er de nå character. Konverterer derfor tilbake
-      #til tid og datoformat
+               sep = " ")
+    if("status" %in% names(test_df)){
+      full_df <- full_df %>% 
+        separate(time,
+                 into = c("updated_date", "updated_time"),
+                 sep = " ")
+    }
+    #Etter kolonnene ble separert, er de nå character. Konverterer derfor tilbake
+    #til tid og datoformat
+    full_df <- full_df %>% 
       mutate(scheduled_time = times(scheduled_time),
-             updated_time = times(updated_time),
-             scheduled_date = ymd(scheduled_date),
-             updated_date = ymd(updated_date)) %>% 
-      #Renamer kolonner
+             scheduled_date = ymd(scheduled_date))
+    
+    if("status" %in% names(test_df)){
+      full_df <- full_df %>% 
+        mutate(
+          updated_time = times(updated_time),
+          updated_date = ymd(updated_date) 
+        )
+    }
+    #Renamer kolonner
+    full_df <- full_df %>% 
       rename(airline_code = airline,
-             airport_code = airport,
-             status_code = code,
-             status_text_EN = statusTextEn,
-             status_text_NO = statusTextNo) %>% 
-      #Joiner inn airline navn og airport navn
+             airport_code = airport)
+    if("status" %in% names(test_df)){
+      full_df <- full_df %>% 
+        mutate(
+          status_code = code,
+          status_text_EN = statusTextEn,
+          status_text_NO = statusTextNo
+        )
+    }
+    #Joiner inn airline navn og airport navn
+    full_df <- full_df %>% 
       left_join(airlines_df, by = c("airline_code" = "code")) %>% 
       left_join(airport_df, by = c("airport_code" = "code")) %>% 
       #Relocater noen kolonner for å gjøre dataframen mer leselig
       relocate(airline_name, .after = airline_code) %>% 
       relocate(airport_name, .after = airport_code) %>% 
-      relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
       mutate(origin = origin) %>% 
       filter(!is.na(uniqueID))
+    if("status" %in% names(test_df)){
+      full_df <- full_df %>% 
+        relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
+        select(-status)
+    }
   }
   
 }
@@ -94,7 +140,7 @@ if (!exists("final_df")){
   final_df <- data.frame()
 }
 
-avinor_airports <- c("OSL", "BGO", "KRS", "VDB", "KSU", "MOL", "HOV", "AES", "ANX",
+avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
                      "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
                      "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
                      "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
