@@ -133,7 +133,8 @@ final_update <- function(){
   if(nrow(final_df) == 0)
     final_df <<- full_df
   else
-    final_df <<- bind_rows(final_df, full_df) 
+    final_df <<- bind_rows(final_df, full_df) %>% 
+      distinct(uniqueID, .keep_all = T)
 }
 
 if (!exists("final_df")){
