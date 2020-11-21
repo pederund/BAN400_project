@@ -147,8 +147,6 @@ avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "AN
                      "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
                      "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
 
-our_airports <- c("OSL", "BGO", "SVG", "TRD", "BOO", "KRS", "TOS", "AES")
-
 status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?")
 airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?")
 airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp")
@@ -164,7 +162,6 @@ avinor_df <- data.frame(avinor_airports) %>%
 
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
-#origin <- stringr::str_sub(avinor_urls, -3, -1)
 data_url <- map(avinor_urls, getURL)
 
 for (i in 1:length(avinor_airports)){
