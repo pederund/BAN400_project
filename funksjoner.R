@@ -3,6 +3,7 @@ library(RCurl)
 library(tidyverse)
 library(lubridate)
 library(chron)
+library(tcltk2)
 
 tes_func <- function(status_url, airports_url, airlines_url){
   status_codes <- xmlParse(status_url)
@@ -172,4 +173,7 @@ run_function <- function(){
   }
 }
 
-run_function()
+#Linja under kjører funksjonen for å oppdatere hvert tredje minutt, helt til vi
+#sier at den skal stoppe.
+#Det gjøres ved: tclTaskDelete("testing")
+tclTaskSchedule(180000, run_function(), id = "testing", redo = TRUE)
