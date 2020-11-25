@@ -1,4 +1,5 @@
 library(XML)
+library(xml2)
 library(RCurl)
 library(tidyverse)
 library(lubridate)
@@ -7,21 +8,31 @@ library(tcltk2)
 
 tes_func <- function(status_url, airports_url, airlines_url){
   status_codes <- xmlParse(status_url)
-  airport_names <- xmlParse(airports_url)
-  airline_names <- xmlParse(airlines_url)
+  airport_names <- read_xml(airports_url, encoding = "iso-8859-1")
+  airline_names <- read_xml(airlines_url, encoding = "iso-8859-1")
   
+  airport_kids <- xml_children(airport_names)
+  airline_kids <- xml_children(airline_names)
   list_dfs <- list()
   
   list_dfs$status_codes_df <- 
     XML:::xmlAttrsToDataFrame(getNodeSet(status_codes, "//flightStatus"))
   
   list_dfs$airport_df <- 
-    XML:::xmlAttrsToDataFrame(getNodeSet(airport_names, "//airportName")) %>% 
-    rename(airport_name = name)
+    data.frame(
+      code = xml_attr(airport_kids, "code"),
+      airport_name = xml_attr(airport_kids, "name")
+    )
+    #XML:::xmlAttrsToDataFrame(getNodeSet(airport_names, "//airportName")) %>% 
+    #rename(airport_name = name)
   
   list_dfs$airlines_df <- 
-    XML:::xmlAttrsToDataFrame(getNodeSet(airline_names, "//airlineName")) %>% 
-    rename(airline_name = name)
+    data.frame(
+      code = xml_attr(airline_kids, "code"),
+      airline_name = xml_attr(airline_kids, "name")
+    )
+    #XML:::xmlAttrsToDataFrame(getNodeSet(airline_names, "//airlineName")) %>% 
+    #rename(airline_name = name)
   
   return(list_dfs)
 }
@@ -177,3 +188,8 @@ run_function <- function(){
 #sier at den skal stoppe.
 #Det gjøres ved: tclTaskDelete("testing")
 tclTaskSchedule(180000, run_function(), id = "testing", redo = TRUE)
+
+
+#Vi må gjøre om litt, origin er ikke sånn vi har satt opp nå. Origin avhenger av
+#arr_dep. Dvs. hvis arr_dep = A, så er det flyplassen i den raden som er origin,
+#og motsatt hvis arr_dep = D.
