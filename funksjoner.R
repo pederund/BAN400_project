@@ -149,9 +149,6 @@ final_update <- function(){
       distinct(uniqueID, .keep_all = T)
 }
 
-if (!exists("final_df")){
-  final_df <- data.frame()
-}
 
 avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
                      "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
@@ -176,6 +173,7 @@ avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
 
 run_function <- function(){
+  final_df <<- data.frame()
   data_url <- map(avinor_urls, getURL)
   
   for (i in 1:length(avinor_airports)){
@@ -187,9 +185,5 @@ run_function <- function(){
 #Linja under kjører funksjonen for å oppdatere hvert tredje minutt, helt til vi
 #sier at den skal stoppe.
 #Det gjøres ved: tclTaskDelete("testing")
+
 tclTaskSchedule(180000, run_function(), id = "testing", redo = TRUE)
-
-
-#Vi må gjøre om litt, origin er ikke sånn vi har satt opp nå. Origin avhenger av
-#arr_dep. Dvs. hvis arr_dep = A, så er det flyplassen i den raden som er origin,
-#og motsatt hvis arr_dep = D.
