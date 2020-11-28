@@ -58,13 +58,20 @@ server <- function(input, output) {
                    "D"
                  }) %>%
         filter(scheduled_date == input$date) %>%
-        filter(scheduled_time > times(stringr::str_sub(Sys.time(), 12, -1))) %>% 
         unite(
           updated_timestatus, c(status_text_EN, updated_time),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
         unite(
           Flight, c(flight_id, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        filter(
+          if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+            scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
+          }
+          else{
+            scheduled_time >= times(00:00:00)
+          }
+        ) %>%
         select(
           scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
         mutate(belt = if_else(
@@ -89,18 +96,26 @@ server <- function(input, output) {
                    "D"
                  }) %>%
         filter(scheduled_date == input$date) %>%
-        filter(scheduled_time > times(stringr::str_sub(Sys.time(), 12, -1))) %>% 
         unite(
           updated_timestatus, c(status_text_EN, updated_time),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
         unite(
           Flight, c(flight_id, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        filter(
+          if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+            scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
+          }
+          else{
+            scheduled_time >= times(00:00:00)
+          }
+        ) %>%   
         select(
           scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
         mutate(gate = if_else(
           is.na(gate), gate, paste0("Gate ", gate)
-        )) %>% 
+        )) %>%
+        #filter(scheduled_time >= times(stringr::str_sub(Sys.time(), 12))) %>%
         rename("Scheduled time" = scheduled_time,
                "Updated status" = updated_timestatus,
                "To airport" = airport_name,
