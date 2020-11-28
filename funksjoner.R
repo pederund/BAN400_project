@@ -182,8 +182,10 @@ run_function <- function(){
   }
 }
 
+run_function()
+
 #Linja under kjører funksjonen for å oppdatere hvert tredje minutt, helt til vi
 #sier at den skal stoppe.
 #Det gjøres ved: tclTaskDelete("testing")
 
-tclTaskSchedule(180000, run_function(), id = "testing", redo = TRUE)
+#tclTaskSchedule(180000, run_function(), id = "testing", redo = TRUE)
