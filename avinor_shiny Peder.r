@@ -32,8 +32,10 @@ ui <- fluidPage(
                 weekstart = 1,
                 language = "nb",
                 format = "dd M. yyyy"),
+      
       actionButton("refreshButton", "Refresh"),
       p("Data can only be refreshed every 3 minutes"),
+      
       width = 3),
     
     mainPanel(actionButton("viewButton", "Show earlier flights"),
@@ -64,19 +66,18 @@ server <- function(input, output) {
         unite(
           Flight, c(flight_id, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        select(
+          scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
+        mutate(belt = if_else(
+          is.na(belt), belt, paste0("Belt ", belt)
+        )) %>% 
         filter(
           if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
             scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
           }
           else{
             scheduled_time >= times(00:00:00)
-          }
-        ) %>%
-        select(
-          scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
-        mutate(belt = if_else(
-          is.na(belt), belt, paste0("Belt ", belt)
-        )) %>% 
+          }) %>%
         rename("Scheduled time" = scheduled_time,
                "Updated status" = updated_timestatus,
                "From airport" = airport_name,
@@ -102,6 +103,11 @@ server <- function(input, output) {
         unite(
           Flight, c(flight_id, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        select(
+          scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
+        mutate(gate = if_else(
+          is.na(gate), gate, paste0("Gate ", gate)
+        )) %>%
         filter(
           if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
             scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
@@ -109,13 +115,7 @@ server <- function(input, output) {
           else{
             scheduled_time >= times(00:00:00)
           }
-        ) %>%   
-        select(
-          scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
-        mutate(gate = if_else(
-          is.na(gate), gate, paste0("Gate ", gate)
-        )) %>%
-        #filter(scheduled_time >= times(stringr::str_sub(Sys.time(), 12))) %>%
+        ) %>%
         rename("Scheduled time" = scheduled_time,
                "Updated status" = updated_timestatus,
                "To airport" = airport_name,
@@ -129,7 +129,7 @@ server <- function(input, output) {
     input$refreshButton,{
       run_function() 
       #and refresh the output in the shiny app
-      output$df <- renderDataTable({ 
+      output$df <- renderDataTable({
         if(input$arrdep == "Arrival"){
           final_df %>%
             filter(origin == as.character(
@@ -143,7 +143,7 @@ server <- function(input, output) {
                      } else {
                        "D"
                      }) %>%
-            filter(scheduled_date == input$date) %>% 
+            filter(scheduled_date == input$date) %>%
             unite(
               updated_timestatus, c(status_text_EN, updated_time),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
@@ -155,6 +155,13 @@ server <- function(input, output) {
             mutate(belt = if_else(
               is.na(belt), belt, paste0("Belt ", belt)
             )) %>% 
+            filter(
+              if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+                scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
+              }
+              else{
+                scheduled_time >= times(00:00:00)
+              }) %>%
             rename("Scheduled time" = scheduled_time,
                    "Updated status" = updated_timestatus,
                    "From airport" = airport_name,
@@ -173,7 +180,7 @@ server <- function(input, output) {
                      } else {
                        "D"
                      }) %>%
-            filter(scheduled_date == input$date) %>% 
+            filter(scheduled_date == input$date) %>%
             unite(
               updated_timestatus, c(status_text_EN, updated_time),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
@@ -184,19 +191,28 @@ server <- function(input, output) {
               scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
             mutate(gate = if_else(
               is.na(gate), gate, paste0("Gate ", gate)
-            )) %>% 
+            )) %>%
+            filter(
+              if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+                scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
+              }
+              else{
+                scheduled_time >= times(00:00:00)
+              }
+            ) %>%
             rename("Scheduled time" = scheduled_time,
                    "Updated status" = updated_timestatus,
                    "To airport" = airport_name,
                    "Gate" = gate)
         }
-      },escape = FALSE)
+        
+      }, escape = FALSE)
       shinyjs::delay(180000,enable("refreshButton"))
       shinyjs::disable("refreshButton")
       })
   observeEvent(
     input$viewButton,{
-      output$df <- renderDataTable({ 
+      output$df <- renderDataTable({
         if(input$arrdep == "Arrival"){
           final_df %>%
             filter(origin == as.character(
@@ -210,7 +226,7 @@ server <- function(input, output) {
                      } else {
                        "D"
                      }) %>%
-            filter(scheduled_date == input$date) %>% 
+            filter(scheduled_date == input$date) %>%
             unite(
               updated_timestatus, c(status_text_EN, updated_time),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
@@ -240,7 +256,7 @@ server <- function(input, output) {
                      } else {
                        "D"
                      }) %>%
-            filter(scheduled_date == input$date) %>% 
+            filter(scheduled_date == input$date) %>%
             unite(
               updated_timestatus, c(status_text_EN, updated_time),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
@@ -251,13 +267,14 @@ server <- function(input, output) {
               scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
             mutate(gate = if_else(
               is.na(gate), gate, paste0("Gate ", gate)
-            )) %>% 
+            ))%>%
             rename("Scheduled time" = scheduled_time,
                    "Updated status" = updated_timestatus,
                    "To airport" = airport_name,
                    "Gate" = gate)
         }
-      },escape = FALSE)
+        
+      }, escape = FALSE)
     })
   
 }
