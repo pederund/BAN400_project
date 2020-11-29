@@ -67,6 +67,8 @@ server <- function(input, output) {
           sep = " ", remove = FALSE, na.rm = TRUE) %>%
         unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        mutate(updated_flightstatus = 
+                 str_replace(updated_flightstatus,"NA", "")) %>% 
         mutate(flight_id = paste0("<b>",flight_id,"</b>" )) %>% 
         unite(
           Flight, c(flight_id, airline_name),
