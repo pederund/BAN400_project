@@ -27,8 +27,8 @@ ui <- fluidPage(
       
       dateInput(inputId = "date",
                 label = "Select date",
-                min = min(final_df$scheduled_date),
-                max = max(final_df$scheduled_date),
+                min = Sys.Date()-1,
+                max = Sys.Date()+1,
                 weekstart = 1,
                 language = "nb",
                 format = "dd M. yyyy"),
@@ -44,7 +44,7 @@ ui <- fluidPage(
 
 # defining what to output
 server <- function(input, output) {
-  
+
   output$df <- renderDataTable({
     if(input$arrdep == "Arrival"){
       final_df %>%
@@ -60,26 +60,30 @@ server <- function(input, output) {
                    "D"
                  }) %>%
         filter(scheduled_date == input$date) %>%
+        mutate(scheduled_time1 = 
+                 paste0("<b>", stringr::str_sub(scheduled_time,1,5), "</b>")) %>% 
         unite(
           updated_timestatus, c(status_text_EN, updated_time),
-          sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+          sep = " ", remove = FALSE, na.rm = TRUE) %>%
+        unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
+              sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        mutate(flight_id = paste0("<b>",flight_id,"</b>" )) %>% 
         unite(
           Flight, c(flight_id, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-        select(
-          scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
-        mutate(belt = if_else(
-          is.na(belt), belt, paste0("Belt ", belt)
-        )) %>% 
+        mutate(
+          belt = if_else(
+            is.na(belt), belt, paste0("<b>","Belt ", belt, "</b>"))) %>% 
         filter(
-          if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+          if(input$date == Sys.Date()){
             scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
           }
           else{
             scheduled_time >= times(00:00:00)
           }) %>%
-        rename("Scheduled time" = scheduled_time,
-               "Updated status" = updated_timestatus,
+        select(
+          updated_flightstatus ,airport_name, Flight ,belt) %>% 
+        rename("Updated status" = updated_flightstatus,
                "From airport" = airport_name,
                "Belt" = belt)
     }
@@ -109,7 +113,7 @@ server <- function(input, output) {
           is.na(gate), gate, paste0("Gate ", gate)
         )) %>%
         filter(
-          if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+          if(input$date == Sys.Date()){
             scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
           }
           else{
@@ -122,11 +126,12 @@ server <- function(input, output) {
                "Gate" = gate)
     }
     
-  }, escape = FALSE
-    )
+  }, escape = FALSE)
+  
+####If the refreshbutton is clicked####  
   observeEvent(
-    #if the refreshbutton is clicked
     input$refreshButton,{
+      #run the function to update final_df
       run_function() 
       #and refresh the output in the shiny app
       output$df <- renderDataTable({
@@ -156,7 +161,7 @@ server <- function(input, output) {
               is.na(belt), belt, paste0("Belt ", belt)
             )) %>% 
             filter(
-              if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+              if(input$date == Sys.Date()){
                 scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
               }
               else{
@@ -193,7 +198,7 @@ server <- function(input, output) {
               is.na(gate), gate, paste0("Gate ", gate)
             )) %>%
             filter(
-              if(input$date == ymd(str_sub(Sys.time(), 1, 10))){
+              if(input$date == Sys.Date()){
                 scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
               }
               else{
@@ -210,6 +215,8 @@ server <- function(input, output) {
       shinyjs::delay(180000,enable("refreshButton"))
       shinyjs::disable("refreshButton")
       })
+  
+#### If the show earlier flights button is clicked ####
   observeEvent(
     input$viewButton,{
       output$df <- renderDataTable({
