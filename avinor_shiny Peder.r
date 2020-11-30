@@ -50,10 +50,14 @@ ui <- fluidPage(
 # defining what to output
 server <- function(input, output) {
   
-  #setting the number of rows shown and only showing the table and searchbox
-  options(DT.options = list(pageLength = 30, dom = "ft"))
+  #setting the number of rows shown and only showing the table, filtering-box 
+  #and also keep pagination control. As well as changing the text in some instances.
+  options(DT.options = list(pageLength = 30, 
+                            dom = "ftp",
+                            language = list(zeroRecords = "No flights to display",
+                                            search = "Search (city, flight number or airline):")))
   
-  #default output
+  #default table output
   output$df <- renderDataTable({
     if(input$arrdep == "Arrival"){
       final_df %>%
