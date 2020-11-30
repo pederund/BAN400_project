@@ -44,6 +44,10 @@ ui <- fluidPage(
     mainPanel(actionButton("viewButton", "Show earlier flights",
                            style = "color: white; background-color: #84216b;
                                     position:relative;left:350px"),
+              tags$style(HTML("
+                              thead {background-color:#f0f1f3;}
+                              table.dataTable tbody tr {background-color:white !important}"
+                              )),
               dataTableOutput(outputId = 'df'),
               width = 9)))
 
@@ -51,7 +55,8 @@ ui <- fluidPage(
 server <- function(input, output) {
   
   #setting the number of rows shown and only showing the table, filtering-box 
-  #and also keep pagination control. As well as changing the text in some instances.
+  #and also keep pagination control. Also removing the option to order columns.
+  #As well as changing the text in some instances.
   options(DT.options = list(pageLength = 30, 
                             dom = "ftp",
                             ordering = FALSE,
@@ -137,7 +142,7 @@ server <- function(input, output) {
                "Gate" = gate)
     }
     
-  }, escape = FALSE, rownames = FALSE)
+  }, escape = FALSE, rownames = FALSE) 
   
 ####If the refreshbutton is clicked####  
   observeEvent(
