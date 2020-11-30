@@ -8,8 +8,8 @@ library(tcltk2)
 
 tes_func <- function(status_url, airports_url, airlines_url){
   status_codes <- xmlParse(status_url)
-  airport_names <- read_xml(airports_url, encoding = "iso-8859-1")
-  airline_names <- read_xml(airlines_url, encoding = "iso-8859-1")
+  airport_names <- read_xml(airports_url, encoding = "ISO-8859-1")
+  airline_names <- read_xml(airlines_url, encoding = "ISO-8859-1")
   
   airport_kids <- xml_children(airport_names)
   airline_kids <- xml_children(airline_names)
@@ -156,9 +156,9 @@ avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "AN
                      "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
                      "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
 
-status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?")
-airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?")
-airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp")
+status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?", .encoding = "ISO-8859-1")
+airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?", .encoding = "ISO-8859-1")
+airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp", .encoding = "ISO-8859-1")
 
 test_dfs <- tes_func(status_url, airports_url, airlines_url)
 status_codes_df <- test_dfs$status_codes_df
@@ -174,11 +174,12 @@ avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24"
 
 run_function <- function(){
   final_df <<- data.frame()
-  data_url <- map(avinor_urls, getURL)
+  data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
   
   for (i in 1:length(avinor_airports)){
     full_df <<- new_function(data_url[[i]], avinor_airports[i])
     final_update()
+    
   }
 }
 

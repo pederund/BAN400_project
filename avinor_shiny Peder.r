@@ -34,18 +34,26 @@ ui <- fluidPage(
                 language = "nb",
                 format = "dd M. yyyy"),
       
-      actionButton("refreshButton", "Refresh"),
-      p("Data can only be refreshed every 3 minutes"),
+      actionButton("refreshButton", "Refresh data",
+                   style = "color: white; background-color: #84216b"),
+      br(),
+      tags$b("Data can only be refreshed every 3 minutes"),
       
       width = 3),
     
-    mainPanel(actionButton("viewButton", "Show earlier flights"),
+    mainPanel(actionButton("viewButton", "Show earlier flights",
+                           style = "color: white; background-color: #84216b;
+                                    position:relative;left:350px"),
               dataTableOutput(outputId = 'df'),
               width = 9)))
 
 # defining what to output
 server <- function(input, output) {
-
+  
+  #setting the number of rows shown and only showing the table and searchbox
+  options(DT.options = list(pageLength = 30, dom = "ft"))
+  
+  #default output
   output$df <- renderDataTable({
     if(input$arrdep == "Arrival"){
       final_df %>%
@@ -99,11 +107,16 @@ server <- function(input, output) {
                    "D"
                  }) %>%
         filter(scheduled_date == input$date) %>%
+        mutate(scheduled_time1 = paste0("<b>", str_sub(scheduled_time,1,5), "</b>")) %>% 
         unite(updated_timestatus, c(status_text_EN, updated_time),
+              sep = " ", remove = FALSE, na.rm = TRUE) %>%
+        unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
               sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+        mutate(updated_flightstatus = 
+                 str_replace(updated_flightstatus,"NA", "")) %>% 
+        mutate(flight_id = paste0("<b>",flight_id,"</b>")) %>% 
         unite(Flight, c(flight_id, airline_name),
-              sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-        select(scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
+              sep = "<br>", remove = FALSE, na.rm = TRUE) %>%  
         mutate(gate = if_else(
           is.na(gate), gate, paste0("Gate ", gate))) %>%
         filter(
@@ -113,13 +126,13 @@ server <- function(input, output) {
           else{
             scheduled_time >= times(00:00:00)
           }) %>%
-        rename("Scheduled time" = scheduled_time,
-               "Updated status" = updated_timestatus,
+        select(updated_flightstatus, airport_name ,Flight ,gate) %>%
+        rename("Updated status" = updated_flightstatus,
                "To airport" = airport_name,
                "Gate" = gate)
     }
     
-  }, escape = FALSE)
+  }, escape = FALSE, rownames = FALSE)
   
 ####If the refreshbutton is clicked####  
   observeEvent(
@@ -142,22 +155,27 @@ server <- function(input, output) {
                        "D"
                      }) %>%
             filter(scheduled_date == input$date) %>%
+            mutate(scheduled_time1 = paste0("<b>", str_sub(scheduled_time,1,5), "</b>")) %>% 
             unite(updated_timestatus, c(status_text_EN, updated_time),
+                  sep = " ", remove = FALSE, na.rm = TRUE) %>%
+            unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+            mutate(updated_flightstatus = 
+                     str_replace(updated_flightstatus,"NA", "")) %>% 
+            mutate(flight_id = paste0("<b>",flight_id,"</b>")) %>% 
             unite(Flight, c(flight_id, airline_name),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-            select(scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
             mutate(belt = if_else(
-              is.na(belt), belt, paste0("Belt ", belt))) %>% 
+              is.na(belt), belt, paste0("<b>","Belt ", belt, "</b>"))) %>% 
             filter(
               if(input$date == Sys.Date()){
-                scheduled_time >= times(stringr::str_sub(Sys.time(), 12))
+                scheduled_time >= times(str_sub(Sys.time(), 12))
               }
               else{
                 scheduled_time >= times(00:00:00)
               }) %>%
-            rename("Scheduled time" = scheduled_time,
-                   "Updated status" = updated_timestatus,
+            select(updated_flightstatus ,airport_name, Flight ,belt) %>% 
+            rename("Updated status" = updated_flightstatus,
                    "From airport" = airport_name,
                    "Belt" = belt)
         }
@@ -175,11 +193,16 @@ server <- function(input, output) {
                        "D"
                      }) %>%
             filter(scheduled_date == input$date) %>%
+            mutate(scheduled_time1 = paste0("<b>", str_sub(scheduled_time,1,5), "</b>")) %>% 
             unite(updated_timestatus, c(status_text_EN, updated_time),
+                  sep = " ", remove = FALSE, na.rm = TRUE) %>%
+            unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+            mutate(updated_flightstatus = 
+                     str_replace(updated_flightstatus,"NA", "")) %>% 
+            mutate(flight_id = paste0("<b>",flight_id,"</b>")) %>% 
             unite(Flight, c(flight_id, airline_name),
-                  sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-            select(scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
+                  sep = "<br>", remove = FALSE, na.rm = TRUE) %>%  
             mutate(gate = if_else(
               is.na(gate), gate, paste0("Gate ", gate))) %>%
             filter(
@@ -189,13 +212,13 @@ server <- function(input, output) {
               else{
                 scheduled_time >= times(00:00:00)
               }) %>%
-            rename("Scheduled time" = scheduled_time,
-                   "Updated status" = updated_timestatus,
+            select(updated_flightstatus, airport_name ,Flight ,gate) %>%
+            rename("Updated status" = updated_flightstatus,
                    "To airport" = airport_name,
                    "Gate" = gate)
         }
         
-      }, escape = FALSE)
+      }, escape = FALSE, rownames = FALSE)
       shinyjs::delay(180000,enable("refreshButton"))
       shinyjs::disable("refreshButton")
       })
@@ -218,15 +241,20 @@ server <- function(input, output) {
                        "D"
                      }) %>%
             filter(scheduled_date == input$date) %>%
+            mutate(scheduled_time1 = paste0("<b>", str_sub(scheduled_time,1,5), "</b>")) %>% 
             unite(updated_timestatus, c(status_text_EN, updated_time),
+                  sep = " ", remove = FALSE, na.rm = TRUE) %>%
+            unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+            mutate(updated_flightstatus = 
+                     str_replace(updated_flightstatus,"NA", "")) %>% 
+            mutate(flight_id = paste0("<b>",flight_id,"</b>")) %>% 
             unite(Flight, c(flight_id, airline_name),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-            select(scheduled_time, updated_timestatus ,airport_name, Flight ,belt) %>% 
             mutate(belt = if_else(
-              is.na(belt), belt, paste0("Belt ", belt))) %>% 
-            rename("Scheduled time" = scheduled_time,
-                   "Updated status" = updated_timestatus,
+              is.na(belt), belt, paste0("<b>","Belt ", belt, "</b>"))) %>%
+            select(updated_flightstatus ,airport_name, Flight ,belt) %>% 
+            rename("Updated status" = updated_flightstatus,
                    "From airport" = airport_name,
                    "Belt" = belt)
         }
@@ -244,20 +272,25 @@ server <- function(input, output) {
                        "D"
                      }) %>%
             filter(scheduled_date == input$date) %>%
+            mutate(scheduled_time1 = paste0("<b>", str_sub(scheduled_time,1,5), "</b>")) %>% 
             unite(updated_timestatus, c(status_text_EN, updated_time),
+                  sep = " ", remove = FALSE, na.rm = TRUE) %>%
+            unite(updated_flightstatus, c(scheduled_time1, updated_timestatus),
                   sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+            mutate(updated_flightstatus = 
+                     str_replace(updated_flightstatus,"NA", "")) %>% 
+            mutate(flight_id = paste0("<b>",flight_id,"</b>")) %>% 
             unite(Flight, c(flight_id, airline_name),
-                  sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
-            select(scheduled_time, updated_timestatus, airport_name ,Flight ,gate) %>% 
+                  sep = "<br>", remove = FALSE, na.rm = TRUE) %>%  
             mutate(gate = if_else(
-              is.na(gate), gate, paste0("Gate ", gate)))%>%
-            rename("Scheduled time" = scheduled_time,
-                   "Updated status" = updated_timestatus,
+              is.na(gate), gate, paste0("Gate ", gate))) %>%
+            select(updated_flightstatus, airport_name ,Flight ,gate) %>%
+            rename("Updated status" = updated_flightstatus,
                    "To airport" = airport_name,
                    "Gate" = gate)
         }
         
-      }, escape = FALSE)
+      }, escape = FALSE, rownames = FALSE)
     })
   
 }
