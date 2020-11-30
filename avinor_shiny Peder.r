@@ -54,6 +54,7 @@ server <- function(input, output) {
   #and also keep pagination control. As well as changing the text in some instances.
   options(DT.options = list(pageLength = 30, 
                             dom = "ftp",
+                            ordering = FALSE,
                             language = list(zeroRecords = "No flights to display",
                                             search = "Search (city, flight number or airline):")))
   
