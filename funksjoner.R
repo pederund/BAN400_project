@@ -53,7 +53,8 @@ new_function <- function(data_url, origin){
       bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
                 XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
     
-  if("status" %in% names(test_df)){
+  if("status" %in% names(test_df) & "N" %in% df_status$code | "E" %in% df_status$code | "D" %in% df_status$code | "A" %in% df_status$code){
+    #At least one of the statuses N,E,D or A has to be present for some of the code below to work
       full_df <- flight_df %>% 
         full_join(df_status)
       
@@ -179,7 +180,6 @@ run_function <- function(){
   for (i in 1:length(avinor_airports)){
     full_df <<- new_function(data_url[[i]], avinor_airports[i])
     final_update()
-    
   }
 }
 
