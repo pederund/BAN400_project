@@ -1,6 +1,7 @@
 library(shiny)
 library(shinyjs)
 library(stringr)
+library(DT)
 
 # defining user interface and input variables
 ui <- fluidPage(

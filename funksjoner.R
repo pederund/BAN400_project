@@ -142,13 +142,13 @@ new_function <- function(data_url, origin){
   
 }
 
-final_update <- function(){
-  if(nrow(final_df) == 0)
-    final_df <<- full_df
-  else
-    final_df <<- bind_rows(final_df, full_df) %>% 
-      distinct(uniqueID, .keep_all = T)
-}
+#final_update <- function(){
+#  if(nrow(final_df) == 0)
+#    final_df <<- full_df
+#  else
+#    final_df <<- bind_rows(final_df, full_df) %>% 
+#      distinct(uniqueID, .keep_all = T)
+#}
 
 
 avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
@@ -177,11 +177,12 @@ run_function <- function(){
   final_df <<- data.frame()
   data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
   
-  for (i in 1:length(avinor_airports)){
-    full_df <<- new_function(data_url[[i]], avinor_airports[i])
-    final_update()
+  final_df <<- data_url %>% 
+    map2_dfr(., avinor_airports ,~new_function(.x, .y))
+  #map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
+  #data_url og avinor_airports.
   }
-}
+
 
 run_function()
 
