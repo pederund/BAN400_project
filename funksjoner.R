@@ -53,102 +53,15 @@ new_function <- function(data_url, origin){
       bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
                 XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
     
-  if("status" %in% names(test_df) & "N" %in% df_status$code | "E" %in% df_status$code | "D" %in% df_status$code | "A" %in% df_status$code){
-    #At least one of the statuses N,E,D or A has to be present for some of the code below to work
-      full_df <- flight_df %>% 
-        full_join(df_status)
-      
-      full_df <- full_df %>% 
-        full_join(status_codes_df) 
-    }
-  else{
-      full_df <- flight_df %>% 
-        mutate(origin = origin,
-               schedule_time = ymd_hms(schedule_time,
-                                              tz = ("UTC")),
-               schedule_time = force_tz(with_tz(schedule_time,
-                                                       tz = "CET"))) %>% 
-        rename(airline_code = airline,
-               airport_code = airport)
-      return(full_df)
-    }
+    full_df <- flight_df %>% 
+      full_join(df_status)
     
     full_df <- full_df %>% 
-      #Rydder opp i tidskolonnene
-      mutate(schedule_time = ymd_hms(schedule_time,
-                                     tz = ("UTC")),
-             schedule_time = force_tz(with_tz(schedule_time,
-                                              tz = "CET"))) 
-    if("status" %in% names(test_df)){
-      full_df <- full_df %>% 
-        mutate(
-          time = ymd_hms(time,
-                         tz = "UTC"),
-          time = force_tz(with_tz(time,
-                                  tz = "CET"))
-        )
-    } 
-    full_df <- full_df %>% 
-      #Skiller dato og tid fra hverandre
-      separate(schedule_time,
-               into = c("scheduled_date", "scheduled_time"),
-               sep = " ")
-    if("status" %in% names(test_df)){
-      full_df <- full_df %>% 
-        separate(time,
-                 into = c("updated_date", "updated_time"),
-                 sep = " ")
-    }
-    #Etter kolonnene ble separert, er de nÃ¥ character. Konverterer derfor tilbake
-    #til tid og datoformat
-    full_df <- full_df %>% 
-      mutate(scheduled_time = times(scheduled_time),
-             scheduled_date = ymd(scheduled_date))
-    
-    if("status" %in% names(test_df)){
-      full_df <- full_df %>% 
-        mutate(
-          updated_time = times(updated_time),
-          updated_date = ymd(updated_date) 
-        )
-    }
-    #Renamer kolonner
-    full_df <- full_df %>% 
-      rename(airline_code = airline,
-             airport_code = airport)
-    if("status" %in% names(test_df)){
-      full_df <- full_df %>% 
-        mutate(
-          status_code = code,
-          status_text_EN = statusTextEn,
-          status_text_NO = statusTextNo
-        )
-    }
-    #Joiner inn airline navn og airport navn
-    full_df <- full_df %>% 
-      left_join(airlines_df, by = c("airline_code" = "code")) %>% 
-      left_join(airport_df, by = c("airport_code" = "code")) %>% 
-      #Relocater noen kolonner for Ã¥ gjÃ¸re dataframen mer leselig
-      relocate(airline_name, .after = airline_code) %>% 
-      relocate(airport_name, .after = airport_code) %>% 
+      full_join(status_codes_df) %>% 
       mutate(origin = origin) %>% 
       filter(!is.na(uniqueID))
-    if("status" %in% names(test_df)){
-      full_df <- full_df %>% 
-        relocate(c(status_text_NO, status_text_EN), .after = status_code) %>% 
-        select(-status)
-    }
   }
-  
 }
-
-#final_update <- function(){
-#  if(nrow(final_df) == 0)
-#    final_df <<- full_df
-#  else
-#    final_df <<- bind_rows(final_df, full_df) %>% 
-#      distinct(uniqueID, .keep_all = T)
-#}
 
 
 avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
@@ -174,14 +87,38 @@ avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
 
 run_function <- function(){
-  final_df <<- data.frame()
+  #final_df <- data.frame()
   data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
   
-  final_df <<- data_url %>% 
-    map2_dfr(., avinor_airports ,~new_function(.x, .y))
+  final_df <- data_url %>% 
+    map2_dfr(., avinor_airports ,~new_function(.x, .y)) %>% 
+    left_join(airlines_df, by = c("airline" = "code")) %>% 
+    left_join(airport_df, by = c("airport" = "code")) %>% 
+    select(-status) %>% 
+    mutate(schedule_time = ymd_hms(schedule_time, tz = ("UTC")),
+           schedule_time = force_tz(with_tz(schedule_time, tz = "CET")),
+           time = ymd_hms(time, tz = "UTC"),
+           time = force_tz(with_tz(time, tz = "CET"))) %>% 
+    separate(schedule_time,
+             into = c("scheduled_date", "scheduled_time"),
+             sep = " ") %>% 
+    separate(time,
+             into = c("updated_date", "updated_time"),
+             sep = " ") %>% 
+    mutate(scheduled_time = times(scheduled_time),
+           scheduled_date = ymd(scheduled_date),
+           updated_time = times(updated_time),
+           updated_date = ymd(updated_date)) %>% 
+    rename(airline_code = airline,
+           airport_code = airport,
+           status_code = code,
+           status_text_EN = statusTextEn,
+           status_text_NO = statusTextNo)
   #map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
   #data_url og avinor_airports.
-  }
+  
+  .GlobalEnv$final_df <- final_df #assigning final_df to the global environment
+}
 
 
 run_function()
