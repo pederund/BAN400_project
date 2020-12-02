@@ -94,10 +94,17 @@ run_function <- function(){
   data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
   
   final_df <- data_url %>% 
+    # creating the dataframe
+    # map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
+    # data_url og avinor_airports.
     map2_dfr(., avinor_airports ,~new_function(.x, .y)) %>% 
+    
+    ## joining in dataframes containing airline & airport names
     left_join(airlines_df, by = c("airline" = "code")) %>% 
     left_join(airport_df, by = c("airport" = "code")) %>% 
-    select(-status) %>% 
+    
+    ## housekeeping ##
+    select(-status) %>%
     mutate(schedule_time = ymd_hms(schedule_time, tz = ("UTC")),
            schedule_time = force_tz(with_tz(schedule_time, tz = "CET")),
            time = ymd_hms(time, tz = "UTC"),
@@ -108,9 +115,9 @@ run_function <- function(){
     separate(time,
              into = c("updated_date", "updated_time"),
              sep = " ") %>% 
-    mutate(scheduled_time = times(scheduled_time),
+    mutate(scheduled_time = chron::times(scheduled_time),
            scheduled_date = ymd(scheduled_date),
-           updated_time = times(updated_time),
+           updated_time = chron::times(updated_time),
            updated_date = ymd(updated_date)) %>% 
     rename(airline_code = airline,
            airport_code = airport,
@@ -118,9 +125,26 @@ run_function <- function(){
            status_text_EN = statusTextEn,
            status_text_NO = statusTextNo) %>% 
     mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
-           airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
-  #map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
-  #data_url og avinor_airports.
+           airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ")) %>%
+    
+    ## mutations done to format what is displayed in shiny app ##
+    mutate(
+      belt_html = if_else(
+        is.na(belt), belt, paste0("<b>","Belt ", belt, "</b>")),
+      gate_html = if_else(
+        is.na(gate), gate, paste0("<b>","Gate ", gate, "</b>")
+      ),
+      scheduled_time_html = paste0("<b>", str_sub(scheduled_time,1,5), "</b>"),
+      updated_time_html = paste0(str_sub(updated_time,1,5)),
+      flight_id_html = paste0("<b>",flight_id,"</b>")) %>% 
+    unite(updated_timestatus, c(status_text_EN, updated_time_html),
+          sep = " ", remove = FALSE, na.rm = TRUE) %>%
+    unite(updated_flightstatus, c(scheduled_time_html, updated_timestatus),
+          sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+    mutate(updated_flightstatus = 
+             str_replace(updated_flightstatus,"NA", "")) %>% 
+    unite(flight_html, c(flight_id_html, airline_name),
+          sep = "<br>", remove = FALSE, na.rm = TRUE)
   
   .GlobalEnv$final_df <- final_df #assigning final_df to the global environment
 }
