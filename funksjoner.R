@@ -4,6 +4,7 @@ library(RCurl)
 library(tidyverse)
 library(lubridate)
 library(chron)
+library(stringr)
 library(tcltk2)
 
 tes_func <- function(status_url, airports_url, airlines_url){
@@ -81,7 +82,9 @@ airlines_df <- test_dfs$airlines_df
 
 avinor_df <- data.frame(avinor_airports) %>% 
   rename(code = avinor_airports) %>% 
-  left_join(airport_df)
+  left_join(airport_df) %>% 
+  mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
+         airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
 
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
@@ -113,7 +116,9 @@ run_function <- function(){
            airport_code = airport,
            status_code = code,
            status_text_EN = statusTextEn,
-           status_text_NO = statusTextNo)
+           status_text_NO = statusTextNo) %>% 
+    mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
+           airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
   #map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
   #data_url og avinor_airports.
   
