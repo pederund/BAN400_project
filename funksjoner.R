@@ -41,10 +41,10 @@ tes_func <- function(status_url, airports_url, airlines_url){
 new_function <- function(data_url, origin){
   data <- xmlParse(data_url)
   
-  test_df <- xmlToDataFrame(getNodeSet(data, "//flight"))
-  if(nrow(test_df) == 0){
-  }
-  else{
+  #test_df <- xmlToDataFrame(getNodeSet(data, "//flight"))
+  #if(nrow(test_df) == 0){
+  #}
+  #else{
     df_status <- 
       XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
       mutate(uniqueID = lag(uniqueID)) %>% 
@@ -55,13 +55,11 @@ new_function <- function(data_url, origin){
                 XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
     
     full_df <- flight_df %>% 
-      full_join(df_status)
-    
-    full_df <- full_df %>% 
-      full_join(status_codes_df) %>% 
+      full_join(df_status) %>% 
       mutate(origin = origin) %>% 
       filter(!is.na(uniqueID))
-  }
+      
+  #}
 }
 
 
@@ -90,18 +88,22 @@ avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
 
 run_function <- function(){
-  #final_df <- data.frame()
-  data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
+  
+  #data_url <- map(.x = avinor_urls, ~getURL(., .encoding = "ISO-8859-1"))
+  # linja under henter inn url'ene kjappere, pga async = TRUE, da laster 
+  # getURL funksjonen inn de 44 urlene samtidig
+  data_url <- getURL(avinor_urls, async = TRUE, .encoding = "ISO-8859-1")
   
   final_df <- data_url %>% 
     # creating the dataframe
     # map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
     # data_url og avinor_airports.
-    map2_dfr(., avinor_airports ,~new_function(.x, .y)) %>% 
+    map2_dfr(.x = ., .y = avinor_airports ,~new_function(.x, .y)) %>% 
     
     ## joining in dataframes containing airline & airport names
     left_join(airlines_df, by = c("airline" = "code")) %>% 
     left_join(airport_df, by = c("airport" = "code")) %>% 
+    full_join(status_codes_df) %>% 
     
     ## housekeeping ##
     select(-status) %>%
@@ -146,7 +148,8 @@ run_function <- function(){
     unite(flight_html, c(flight_id_html, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE)
   
-  .GlobalEnv$final_df <- final_df #assigning final_df to the global environment
+  # assigning final_df to the global environment
+  .GlobalEnv$final_df <- final_df
 }
 
 
