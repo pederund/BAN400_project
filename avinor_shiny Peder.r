@@ -34,12 +34,6 @@ ui <- fluidPage(
                 weekstart = 1,
                 language = "nb",
                 format = "dd M. yyyy"),
-      
-      actionButton("refreshButton", "Refresh data",
-                   style = "color: white; background-color: #84216b"),
-      br(),
-      tags$b("Data can only be refreshed every 3 minutes"),
-      
       width = 3),
     
     mainPanel(actionButton("viewButton", "Show earlier flights",
@@ -69,10 +63,17 @@ server <- function(input, output) {
                             language = list(zeroRecords = "No flights to display",
                                             search = "Search (city, flight number or airline):")))
   
+  #Creating a reactive object, which will be updated every 3 minutes with data from
+  #Avinor through running the function to get the data at a set interval
+  final_dfReactive <-  reactive({
+    invalidateLater(30000)
+    run_function()
+  })
+  
   #default table output
   output$df <- renderDataTable({
     if(input$arrdep == "Arrival"){
-      final_df %>%
+      final_dfReactive() %>%
         filter(origin == as.character(
           avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
         filter(arr_dep == "A") %>% 
@@ -99,7 +100,7 @@ server <- function(input, output) {
                "Flight" = flight_html)
     }
     else{
-      final_df %>%
+      final_dfReactive() %>%
         filter(origin == as.character(
           avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
         filter(arr_dep == "D") %>% 
@@ -128,79 +129,12 @@ server <- function(input, output) {
     
   }, escape = FALSE, rownames = FALSE) 
   
-####If the refreshbutton is clicked####  
-  observeEvent(
-    input$refreshButton,{
-      #run the function to update final_df
-      run_function() 
-      #and refresh the output in the shiny app
-      output$df <- renderDataTable({
-        if(input$arrdep == "Arrival"){
-          final_df %>%
-            filter(origin == as.character(
-              avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
-            filter(arr_dep == "A") %>% 
-            filter(dom_int %in%
-                     if(length(input$domint) == 2 | length(input$domint) == 0) {
-                       c("D", "S", "I")
-                     } else if(input$domint == "International") {
-                       c("S", "I")
-                     } else {
-                       "D"
-                     }) %>%
-            filter(scheduled_date == input$date) %>%
-            filter(
-              if(input$date == Sys.Date()){
-                scheduled_time >= chron::times(str_sub(Sys.time(), 12))
-              }
-              else{
-                scheduled_time >= chron::times(00:00:00)
-              }) %>%
-            select(updated_flightstatus ,airport_name, flight_html ,belt_html) %>% 
-            rename("Updated status" = updated_flightstatus,
-                   "From airport" = airport_name,
-                   "Belt" = belt_html,
-                   "Flight" = flight_html)
-        }
-        else{
-          final_df %>%
-            filter(origin == as.character(
-              avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
-            filter(arr_dep == "D") %>% 
-            filter(dom_int %in%
-                     if(length(input$domint) == 2 | length(input$domint) == 0) {
-                       c("D", "S", "I")
-                     } else if(input$domint == "International") {
-                       c("S", "I")
-                     } else {
-                       "D"
-                     }) %>%
-            filter(scheduled_date == input$date) %>%
-            filter(
-              if(input$date == Sys.Date()){
-                scheduled_time >= chron::times(stringr::str_sub(Sys.time(), 12))
-              }
-              else{
-                scheduled_time >= chron::times(00:00:00)
-              }) %>%
-            select(updated_flightstatus, airport_name ,flight_html ,gate_html) %>%
-            rename("Updated status" = updated_flightstatus,
-                   "To airport" = airport_name,
-                   "Gate" = gate_html,
-                   "Flight" = flight_html)
-        }
-        
-      }, escape = FALSE, rownames = FALSE)
-      shinyjs::delay(180000,enable("refreshButton"))
-      shinyjs::disable("refreshButton")
-      })
-  
 #### If the show earlier flights button is clicked ####
   observeEvent(
     input$viewButton,{
       output$df <- renderDataTable({
         if(input$arrdep == "Arrival"){
-          final_df %>%
+          final_dfReactive() %>%
             filter(origin == as.character(
               avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
             filter(arr_dep == "A") %>% 
@@ -220,7 +154,7 @@ server <- function(input, output) {
                    "Flight" = flight_html)
         }
         else{
-          final_df %>%
+          final_dfReactive() %>%
             filter(origin == as.character(
               avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
             filter(arr_dep == "D") %>% 
@@ -248,7 +182,7 @@ server <- function(input, output) {
     input$resetviewButton,{
       output$df <- renderDataTable({
         if(input$arrdep == "Arrival"){
-          final_df %>%
+          final_dfReactive() %>%
             filter(origin == as.character(
               avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
             filter(arr_dep == "A") %>% 
@@ -275,7 +209,7 @@ server <- function(input, output) {
                    "Flight" = flight_html)
         }
         else{
-          final_df %>%
+          final_dfReactive() %>%
             filter(origin == as.character(
               avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
             filter(arr_dep == "D") %>% 

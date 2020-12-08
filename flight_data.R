@@ -69,11 +69,17 @@ avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "AN
                      "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
                      "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
 
-status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?", .encoding = "ISO-8859-1")
-airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?", .encoding = "ISO-8859-1")
-airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp", .encoding = "ISO-8859-1")
+#status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?", .encoding = "ISO-8859-1")
+#airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?", .encoding = "ISO-8859-1")
+#airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp", .encoding = "ISO-8859-1")
 
-test_dfs <- tes_func(status_url, airports_url, airlines_url)
+check_urls <- c("https://flydata.avinor.no/flightStatuses.asp?",
+                "https://flydata.avinor.no/airportNames.asp?",
+                "https://flydata.avinor.no/airlineNames.asp")
+
+check_getURLS <- getURL(check_urls, async = TRUE, .encoding = "ISO-8859-1")
+
+test_dfs <- tes_func(check_getURLS[1], check_getURLS[2], check_getURLS[3])
 status_codes_df <- test_dfs$status_codes_df
 airport_df <- test_dfs$airport_df
 airlines_df <- test_dfs$airlines_df
@@ -100,10 +106,11 @@ run_function <- function(){
     # data_url og avinor_airports.
     map2_dfr(.x = ., .y = avinor_airports ,~new_function(.x, .y)) %>% 
     
-    ## joining in dataframes containing airline & airport names
+    ## joining in dataframes containing airline- & airport names and also text for 
+    ## each status code
     left_join(airlines_df, by = c("airline" = "code")) %>% 
     left_join(airport_df, by = c("airport" = "code")) %>% 
-    full_join(status_codes_df) %>% 
+    left_join(status_codes_df) %>% 
     
     ## housekeeping ##
     select(-status) %>%
