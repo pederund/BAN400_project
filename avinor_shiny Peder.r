@@ -3,6 +3,8 @@ library(shinyjs)
 library(stringr)
 library(DT)
 
+first_run <- 1
+
 # defining user interface and input variables
 ui <- fluidPage(
   shinyjs::useShinyjs(),
@@ -67,7 +69,12 @@ server <- function(input, output) {
   #Avinor through running the function to get the data at a set interval
   final_dfReactive <-  reactive({
     invalidateLater(30000)
-    run_function()
+    if (first_run == 1){
+      first_run <<- first_run + 1
+      return(final_df)
+    } else{
+      run_function() 
+    }
   })
   
   #default table output
