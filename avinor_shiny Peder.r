@@ -10,11 +10,16 @@ first_run <- 1
 ui <- fluidPage(
   shinyjs::useShinyjs(),
   shinyalert::useShinyalert(),
-  titlePanel(h1('Avinor flight data', align = "center")),
+  headerPanel(
+    h1('Avinor flight data', align = "center")
+    ),
+  
   br(),
   
   sidebarLayout(
     sidebarPanel(
+      tags$a(href = "https://www.avinor.no", "Data from Avinor"),
+      
       helpText('Data will be automatically updated every three minutes.'),
       
       selectInput(inputId = 'airport',
