@@ -1,1 +1,1 @@
-# BAN400_project
+# R interface to Avinor flight data
