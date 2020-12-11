@@ -37,8 +37,8 @@ tes_func <- function(status_url, airports_url, airlines_url){
 get_flightdata <- function(xml_data, origin){
   #' Get Avinor flight data
   #'
-  #' Retrieves flight data from the Avinor "flydata" service, and turns the xml-data
-  #' into a dataframe object.
+  #' Retrieves flight data for an airport from the Avinor "flydata" service, 
+  #' and turns the xml-data into a dataframe object.
   #' 
   #' @details Remember to run the URL to the xml-data through getURL first
   #' 

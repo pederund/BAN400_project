@@ -1,5 +1,6 @@
 library(shiny)
 library(shinyjs)
+library(shinythemes)
 library(shinyalert)
 library(stringr)
 library(DT)
@@ -8,8 +9,10 @@ first_run <- 1
 
 # defining user interface and input variables
 ui <- fluidPage(
+  theme = shinytheme("yeti"),
   shinyjs::useShinyjs(),
   shinyalert::useShinyalert(),
+  
   headerPanel(
     h1('Avinor flight data', align = "center")
     ),
@@ -18,7 +21,6 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
-      tags$a(href = "https://www.avinor.no", "Data from Avinor"),
       
       helpText('Data will be automatically updated every three minutes.'),
       
@@ -40,6 +42,9 @@ ui <- fluidPage(
                 weekstart = 1,
                 language = "nb",
                 format = "dd M. yyyy"),
+      
+      tags$a(href = "https://www.avinor.no", "Data from Avinor"),
+      
       width = 3),
     
     mainPanel(actionButton("viewButton", "Show earlier flights",
