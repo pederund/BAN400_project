@@ -1,5 +1,8 @@
 # R interface to Avinor flight data
 
+## Data
+[Flydata fra Avinor/Flightdata from Avinor](https://avinor.no)
+
 In this project we have collected real time flight data and created a shiny app that visualizes departures and arrivals for airports owned by Avinor. We have separated the process into two scripts. The first, “flight_data.R”, collects the data from Avinor’s own service called "Flydata", while the second one, "avinor_shiny.R" creates the app. The goal has been to replicate the homepage of Avinor (https://avinor.no/flyplass/oslo/flyinformasjon/avganger/).
 The final product should look something like this:
 
