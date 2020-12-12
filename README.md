@@ -34,17 +34,13 @@ The script produces docstrings, descriptions to the functions created, and for t
     install.packages("stringr")
 
 #### Collecting data
+Avinor asks for all projects built on their database to be cached and not let the end-user go directly to their servers. This is therefore the main goal of the source script “flight_data.R”. Data is retrieved from Avinor in XML and needs to be cleansed and converted to an R data frame and then cached. This can be challenging to automate as the XML trees will have lots of variation in both length and structure.
 
+The structure of the source script is to first get all “static” data into an R data frame, such as airline names, airport names etc. Subsequently, the real-time data for each individual airport is fetched and then merged with the metadata. Finally, the complete R data frame is mutated with appropriate formatting for the Shiny application.
 
-#### Formating
-
-
-##### Final_df
 
 
 ## Shiny
-
-Now as the data is collected and sorted, it is time to create the Shiny app.
 
 #### Installation
 When creating the app some packages are necessary for running the app and when designing the layout:
@@ -57,7 +53,7 @@ When creating the app some packages are necessary for running the app and when d
     install.packages("DT")
 
 #### Input
-The Shiny app-function has two inputs. The user interface (ui) and the presented data (server). THe script creates this ui first:
+The Shiny app-function has two inputs. The user interface (ui) and the presented data (server). The script creates this ui first:
 
 ###### User interface
 In this data frame we construct a fluid page. The layout theme is selected as "yeti", this provides the colors and styling needed to replicate Avinor's own homepage. 
