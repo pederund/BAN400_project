@@ -40,9 +40,10 @@ The script produces docstrings, descriptions to the functions created, and for t
 
 ## Shiny
 
-Now as the data is collected and ... we will create the Shiny app by using the packeges provided by Shiny. 
+Now as the data is collected and sorted, it is time to create the Shiny app.
+
 #### Installation
-When creating the app some packeges are necessary for running the app and designing the layout: 
+When creating the app some packeges are necessary for running the app and when designing the layout: 
 
     install.packeged("shiny")
     install.packeged("shinyjs")
@@ -50,6 +51,9 @@ When creating the app some packeges are necessary for running the app and design
     install.packeged("shinyalert")
     install.packeged("stringr")
     install.packeged("DT")
+
+#### Input
+The Shiny app-function has to inputs. The user interface (ui) and the presented data (server). THe script creates this ui first:
 
 
 
