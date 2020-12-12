@@ -22,7 +22,7 @@ Further the script uses these packages to format and read time and date:
 
 For formating data and structuring the script, functions provided by tidyverse have been used:
 
-install.packages("tidyverse")
+    install.packages("tidyverse")
 
 The script produces docstrings, descriptions to the functions created, and for this there are need for these:
 
@@ -43,24 +43,27 @@ The script produces docstrings, descriptions to the functions created, and for t
 Now as the data is collected and sorted, it is time to create the Shiny app.
 
 #### Installation
-When creating the app some packeges are necessary for running the app and when designing the layout: 
+When creating the app some packages are necessary for running the app and when designing the layout:
 
-    install.packeged("shiny")
-    install.packeged("shinyjs")
-    install.packeged("shinythemes")
-    install.packeged("shinyalert")
-    install.packeged("stringr")
-    install.packeged("DT")
+    install.packages("shiny")
+    install.packages("shinyjs")
+    install.packages("shinythemes")
+    install.packages("shinyalert")
+    install.packages("stringr")
+    install.packages("DT")
 
 #### Input
-The Shiny app-function has to inputs. The user interface (ui) and the presented data (server). THe script creates this ui first:
+The Shiny app-function has two inputs. The user interface (ui) and the presented data (server). THe script creates this ui first:
 
 ###### User interface
-In this data frame we construes a fluid page. The layout theme is selected as "yeti", this provides the colors and styling needed to replicate Avinor's 
-own homepage. 
-"shinyjs"??????
-As the data is collected every third minute, the app needs to be refreshed with the same interval. Therefor there have been added an alert, by using the shinyalert function, 
-to
+In this data frame we construct a fluid page. The layout theme is selected as "yeti", this provides the colors and styling needed to replicate Avinor's own homepage. 
+
+"shinyjs"?????? 
+
+As the data is collected every third minute, the app needs to be refreshed with the same time interval. Therefore there have been added an alert, by using the shinyalert function, to give the user a warning when this is happening. The input for the alert is added in “server”, as we only initiate the alert here. 
+
+Furter, the code provides some helpful information for the user of the app, filtering opportunities in the side panel and a main panel with the data table. On top of the main table the “tabsetPanel” produces a tabset, so the user can choose if he or she wants to see departures or arrivals. The syntax “actionButton” produces a button that allows the user to choose if (s)he wants to see only the flights from one hour back in time and further into the future, or all the past flights. 
+
 
 
 
