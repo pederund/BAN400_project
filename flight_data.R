@@ -7,17 +7,48 @@ library(chron)
 library(stringr)
 library(docstring)
 
-tes_func <- function(status_url, airports_url, airlines_url){
-  status_codes <- xmlParse(status_url, encoding = "ISO-8859-1")
-  airport_names <- read_xml(airports_url, encoding = "ISO-8859-1")
-  airline_names <- read_xml(airlines_url, encoding = "ISO-8859-1")
+# Getting the URL's for airlines, airports and status codes from Avinor
+status_url <- "https://flydata.avinor.no/flightStatuses.asp?"
+airports_url <- "https://flydata.avinor.no/airportNames.asp?"
+airlines_url <- "https://flydata.avinor.no/airlineNames.asp"
+
+# Function that will return three dataframes for the data retrieved above
+get_flight_metadata <- function(status_url, airports_url, airlines_url){
+  #' Get flight metadata
+  #' 
+  #' Converting xml data to list of R dataframes. 
+  #' 
+  #' 
+  #' @param status_url URL for the status codes
+  #' @param airports_url URL for the airport names
+  #' @param airlines_url URL for the airline names
+  #' 
+  #' @examples 
+  #' status_url <- "https://flydata.avinor.no/flightStatuses.asp?"
+  #' airports_url <- "https://flydata.avinor.no/airportNames.asp?"
+  #' airlines_url <- "https://flydata.avinor.no/airlineNames.asp"
+  #' metadata_dfs <- get_flight_metadata(status_url, airports_url, airlines_url)
+
+  # Parsing the XML-data
+  status_codes <- read_xml(status_url)
+  airport_names <- read_xml(airports_url)
+  airline_names <- read_xml(airlines_url)
   
+  # Getting the nodeset of the XML-data
+  status_kids <- xml_children(status_codes)
   airport_kids <- xml_children(airport_names)
   airline_kids <- xml_children(airline_names)
+  
+  # Creating a list that will hold the three different df's 
   list_dfs <- list()
   
+  # Creating a dataframe of the attributes from the XML-data, using the nodeset
   list_dfs$status_codes_df <- 
-    XML:::xmlAttrsToDataFrame(getNodeSet(status_codes, "//flightStatus"))
+    data.frame(
+      code = xml_attr(status_kids, "code"),
+      statusTextEn = xml_attr(status_kids, "statusTextEn"),
+      statusTextNo = xml_attr(status_kids, "statusTextNo")
+    )
   
   list_dfs$airport_df <- 
     data.frame(
@@ -33,6 +64,28 @@ tes_func <- function(status_url, airports_url, airlines_url){
   
   return(list_dfs)
 }
+
+metadata_dfs <- get_flight_metadata(status_url, airports_url, airlines_url)
+
+status_codes_df <- metadata_dfs$status_codes_df
+airport_df <- metadata_dfs$airport_df
+airlines_df <- metadata_dfs$airlines_df
+
+
+# Vector containing all the IATA-codes of Avinor's airports
+avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
+                     "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
+                     "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
+                     "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
+                     "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
+
+# Creating a dataframe consisting of only Avinor's airports
+avinor_df <- data.frame(avinor_airports) %>% 
+  rename(code = avinor_airports) %>% 
+  left_join(airport_df) %>% 
+  mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
+         airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
+
 
 get_flightdata <- function(xml_data, origin){
   #' Get Avinor flight data
@@ -69,40 +122,10 @@ get_flightdata <- function(xml_data, origin){
 
 }
 
-# Vector containing all the IATA-codes of Avinor's airports
-avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "ANX",
-                     "BOO", "BNN", "EVE", "LKN", "MQN", "MJF", "RET", "SSJ", "SKN",
-                     "SVJ", "VRY", "HAU", "SVG", "LYR", "OSY", "RRS", "RVK", "TRD",
-                     "ALF", "BVG", "BJF", "HFT", "HAA", "HVG", "KKN", "LKL", "MEH",
-                     "SOJ", "TOS", "VDS", "VAW", "FRO", "FDE", "SDN", "SOG")
-
-#status_url <- getURL("https://flydata.avinor.no/flightStatuses.asp?", .encoding = "ISO-8859-1")
-#airports_url <- getURL("https://flydata.avinor.no/airportNames.asp?", .encoding = "ISO-8859-1")
-#airlines_url <- getURL("https://flydata.avinor.no/airlineNames.asp", .encoding = "ISO-8859-1")
-
-check_urls <- c("https://flydata.avinor.no/flightStatuses.asp?",
-                "https://flydata.avinor.no/airportNames.asp?",
-                "https://flydata.avinor.no/airlineNames.asp")
-
-check_getURLS <- getURL(check_urls, async = TRUE, .encoding = "ISO-8859-1")
-
-test_dfs <- tes_func(check_getURLS[1], check_getURLS[2], check_getURLS[3])
-status_codes_df <- test_dfs$status_codes_df
-airport_df <- test_dfs$airport_df
-airlines_df <- test_dfs$airlines_df
-
-# Creating a dataframe consisting of only Avinor's airports
-avinor_df <- data.frame(avinor_airports) %>% 
-  rename(code = avinor_airports) %>% 
-  left_join(airport_df) %>% 
-  mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
-         airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
-
-
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
 
-run_function <- function(){
+create_final_df <- function(){
 
   # linja under henter inn url'ene kjappere, pga async = TRUE, da laster 
   # getURL funksjonen inn de 44 urlene samtidig
@@ -166,4 +189,4 @@ run_function <- function(){
 }
 
 
-final_df <- run_function()
+final_df <- create_final_df()

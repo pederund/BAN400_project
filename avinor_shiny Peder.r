@@ -107,7 +107,7 @@ server <- function(input, output) {
         closeOnClickOutside = TRUE, animation = TRUE, timer = 5000,
         showConfirmButton = FALSE
       )
-      run_function()
+      create_final_df()
     }
   })
   
