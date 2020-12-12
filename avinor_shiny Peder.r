@@ -98,7 +98,7 @@ server <- function(input, output) {
   #Avinor through running the function to get the data at a set interval
   final_dfReactive <-  reactive({
     invalidateLater(180000)
-    if (first_run == 1){
+    if (first_run < 2){
       first_run <<- first_run + 1
       return(final_df)
     } else{

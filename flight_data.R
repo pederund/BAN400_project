@@ -82,9 +82,8 @@ avinor_airports <- c("OSL", "BGO", "KRS", "BDU", "KSU", "MOL", "HOV", "AES", "AN
 # Creating a dataframe consisting of only Avinor's airports
 avinor_df <- data.frame(avinor_airports) %>% 
   rename(code = avinor_airports) %>% 
-  left_join(airport_df) %>% 
-  mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
-         airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ"))
+  # Joining in the airport names
+  left_join(airport_df)
 
 
 get_flightdata <- function(xml_data, origin){
@@ -104,17 +103,25 @@ get_flightdata <- function(xml_data, origin){
   #' osl_xml <- getURL("https://flydata.avinor.no/XmlFeed.asp?airport=OSL&TimeFrom=24&TimeTo=24")
   #' get_flightdata(osl_xml, "OSL")
   
+  # Parsing the XML-data 
   data <- xmlParse(xml_data)
   
+  # Getting the status code and status time for each unique flight-id
+  # This is done due to the "status" column from the XML-data contining two values.
+  # IT was not able to be read in correctly, so it will be joined in with the flight data later
   df_status <- 
     XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
+    # Due to the unique id and status code not appearing on the same row,
+    # the unique id is lagged (pushed a row down)
     mutate(uniqueID = lag(uniqueID)) %>% 
     filter(!is.na(uniqueID))
   
+  # Getting all the data for each flight
   flight_df <- 
     bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
               XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
   
+  # Joining the flight data and status codes and times toghether
   full_df <- flight_df %>% 
     full_join(df_status) %>% 
     mutate(origin = origin) %>% 
@@ -122,22 +129,27 @@ get_flightdata <- function(xml_data, origin){
 
 }
 
+# Getting the base URL for each airport
 avinor_base_url <- "https://flydata.avinor.no/XmlFeed.asp?airport="
+
+# Creating a vector of the full url for all 44 airports. The base url is pasted 
+# toghether with the airport IATA-code and the rest of the URL
 avinor_urls <- paste0(avinor_base_url, avinor_airports, "&TimeFrom=24&TimeTo=24")
 
 create_final_df <- function(){
 
-  # linja under henter inn url'ene kjappere, pga async = TRUE, da laster 
-  # getURL funksjonen inn de 44 urlene samtidig
+  # Reading in all 44 URL's with the XML-data for each airport simultaneously 
   data_url <- getURL(avinor_urls, async = TRUE, .encoding = "ISO-8859-1")
   
-  final_df <- data_url %>% 
-    # creating the dataframe
-    # map2dfr lar oss loope over 2 inputs samtidig. Her looper vi altså over både
-    # data_url og avinor_airports.
-    map2_dfr(.x = ., .y = avinor_airports ,~get_flightdata(.x, .y)) %>% 
+  # Creating the final dataframe
+  
+  final_df <-  
+    # Iterating through the objects data_url and avinor_airports, calling the 
+    # get_flightdata function 44 times. The data_url is the first argument to the function,
+    # and avinor_airports the second argument
+    map2_dfr(.x = data_url, .y = avinor_airports ,~get_flightdata(.x, .y)) %>% 
     
-    ## joining in dataframes containing airline- & airport names and also text for 
+    ## Joining in dataframes containing airline- & airport names and also text for 
     ## each status code
     left_join(airlines_df, by = c("airline" = "code")) %>% 
     left_join(airport_df, by = c("airport" = "code")) %>% 
@@ -145,16 +157,23 @@ create_final_df <- function(){
     
     ## housekeeping ##
     select(-status) %>%
+    
+    # All times are given in timezone UTC, thus we have to convert it to CET
     mutate(schedule_time = ymd_hms(schedule_time, tz = ("UTC")),
            schedule_time = force_tz(with_tz(schedule_time, tz = "CET")),
            time = ymd_hms(time, tz = "UTC"),
-           time = force_tz(with_tz(time, tz = "CET"))) %>% 
+           time = force_tz(with_tz(time, tz = "CET"))) %>%
+    
+    # Separating the schedule_time and time columns into date and time columns
     separate(schedule_time,
              into = c("scheduled_date", "scheduled_time"),
              sep = " ") %>% 
     separate(time,
              into = c("updated_date", "updated_time"),
              sep = " ") %>% 
+    
+    # After the separation, the column are now character. Therefore we convert it
+    # back to date and time format
     mutate(scheduled_time = chron::times(scheduled_time),
            scheduled_date = ymd(scheduled_date),
            updated_time = chron::times(updated_time),
@@ -167,26 +186,34 @@ create_final_df <- function(){
     mutate(airport_name = str_replace(airport_name, pattern = "Ã¸", replacement = "ø"),
            airport_name = str_replace(airport_name, pattern = "Ã¦", replacement = "æ")) %>%
     
-    ## mutations done to format what is displayed in shiny app ##
+    # Mutations done to format what is displayed in shiny app 
+    # Adding bold text, linebreaks etc. in html-code
     mutate(
       belt_html = if_else(
         is.na(belt), belt, paste0("<b>","Belt ", belt, "</b>")),
+      
       gate_html = if_else(
-        is.na(gate), gate, paste0("<b>","Gate ", gate, "</b>")
-      ),
+        is.na(gate), gate, paste0("<b>","Gate ", gate, "</b>")),
+      
       scheduled_time_html = paste0("<b>", str_sub(scheduled_time,1,5), "</b>"),
+      
       updated_time_html = paste0(str_sub(updated_time,1,5)),
+      
       flight_id_html = paste0("<b>",flight_id,"</b>")) %>% 
-    unite(updated_timestatus, c(status_text_EN, updated_time_html),
+      unite(updated_timestatus, c(status_text_EN, updated_time_html),
           sep = " ", remove = FALSE, na.rm = TRUE) %>%
+    
     unite(updated_flightstatus, c(scheduled_time_html, updated_timestatus),
           sep = "<br>", remove = FALSE, na.rm = TRUE) %>% 
+    
     mutate(updated_flightstatus = 
              str_replace(updated_flightstatus,"NA", "")) %>% 
+    
     unite(flight_html, c(flight_id_html, airline_name),
           sep = "<br>", remove = FALSE, na.rm = TRUE)
   
+  return(final_df)
+  
 }
-
 
 final_df <- create_final_df()
