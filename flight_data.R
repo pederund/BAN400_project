@@ -106,26 +106,39 @@ get_flightdata <- function(xml_data, origin){
   # Parsing the XML-data 
   data <- xmlParse(xml_data)
   
-  # Getting the status code and status time for each unique flight-id
-  # This is done due to the "status" column from the XML-data contining two values.
-  # IT was not able to be read in correctly, so it will be joined in with the flight data later
-  df_status <- 
-    XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
-    # Due to the unique id and status code not appearing on the same row,
-    # the unique id is lagged (pushed a row down)
-    mutate(uniqueID = lag(uniqueID)) %>% 
-    filter(!is.na(uniqueID))
+  # Creating a dataframe to test if the given airport has any data, because if not
+  # the script will break
+  test_df <- 
+    XML:::xmlAttrsToDataFrame(getNodeSet(data, ("//flight")))
   
-  # Getting all the data for each flight
-  flight_df <- 
-    bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
-              XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
+  #If there is no data for the given airport, do nothing
+  if(nrow(test_df == 0)) {
+    
+  } else { # If there is data for the given airport, do the following
+    # Getting the status code and status time for each unique flight-id
+    # This is done due to the "status" column from the XML-data contining two values.
+    # IT was not able to be read in correctly, so it will be joined in with the flight data later
+    df_status <- 
+      XML:::xmlAttrsToDataFrame(getNodeSet(data, c("//flight","//status"))) %>% 
+      # Due to the unique id and status code not appearing on the same row,
+      # the unique id is lagged (pushed a row down)
+      mutate(uniqueID = lag(uniqueID)) %>% 
+      filter(!is.na(uniqueID))
+    
+    # Getting all the data for each flight
+    flight_df <- 
+      bind_cols(xmlToDataFrame(getNodeSet(data, "//flight")),
+                XML:::xmlAttrsToDataFrame(getNodeSet(data, "//flight")))
+    
+    # Joining the flight data and status codes and times toghether
+    full_df <- flight_df %>% 
+      full_join(df_status) %>% 
+      mutate(origin = origin) %>% 
+      filter(!is.na(uniqueID))
+    
+    return(full_df)
+  }
   
-  # Joining the flight data and status codes and times toghether
-  full_df <- flight_df %>% 
-    full_join(df_status) %>% 
-    mutate(origin = origin) %>% 
-    filter(!is.na(uniqueID))
 
 }
 
