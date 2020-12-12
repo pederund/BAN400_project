@@ -5,13 +5,17 @@ library(shinyalert)
 library(stringr)
 library(DT)
 
+# Object used to control the output on the first run, to avoid the app updating 
+# data on first launch
 first_run <- 1
 
 # defining user interface and input variables
 ui <- fluidPage(
   theme = shinytheme("yeti"),
-  shinyjs::useShinyjs(),
-  shinyalert::useShinyalert(),
+  
+  # Initiating Shinyjs and Shinyalert
+  useShinyjs(),
+  useShinyalert(),
   
   headerPanel(
     h1('Avinor flight data', align = "center")
@@ -33,7 +37,7 @@ ui <- fluidPage(
       checkboxGroupInput(inputId = "domint",
                          label = "Domestic / International",
                          choices = c("Domestic", "International"),
-                         selected = c("Domestic", "International")),
+                         selected = NULL),
       
       dateInput(inputId = "date",
                 label = "Select date",
@@ -47,28 +51,36 @@ ui <- fluidPage(
       
       width = 3),
     
-    mainPanel(actionButton("viewButton", "Show earlier flights",
-                           style = "color: white; background-color: #84216b;
+    mainPanel(
+      actionButton(inputId = "viewButton", 
+                   label = "Show earlier flights",
+                   style = "color: white; background-color: #84216b;
                                     position:relative;left:350px"),
-              
-              actionButton("resetviewButton", "Hide earlier flights",
-                           style = "color: white; background-color: #84216b;
+      
+      actionButton(inputId = "resetviewButton", 
+                   label = "Hide earlier flights",
+                   style = "color: white; background-color: #84216b;
                                     position:relative;left:350px"),
-              br(),
-              br(),
-              
-              tabsetPanel(
-                id = 'dataset',
-                tabPanel("Arrival",dataTableOutput("table1")),
-                tabPanel("Departure", dataTableOutput("table2"))),
-              
-              br(),
-              
-              dataTableOutput(outputId = 'df', width = "100%"),
-              width = 9)),
+      br(),
+      br(),
+      
+      tabsetPanel(
+        id = 'dataset',
+        tabPanel("Arrival",dataTableOutput("table1")),
+        tabPanel("Departure", dataTableOutput("table2"))),
+      
+      br(),
+      
+      dataTableOutput(outputId = 'df', 
+                      width = "100%"),
+      width = 9)),
   
+  # CSS code to style different elements in the shiny app,
+  # Setting background colors for the area around the table and also background 
+  # color for the table rows. Also setting background color for the tabs and 
+  # width of the tabs
   tags$style(HTML("
-  thead {background-color:#f0f1f3;}
+  thead {background-color:#f0f1f3;} 
   tbody tr {background-color:white !important}
   .dataTables_wrapper {background-color: #f0f1f3;}
   .tabbable > .nav > li[class=active]  > a {background-color:#f0f1f3;   color:black}
@@ -94,26 +106,35 @@ server <- function(input, output) {
                             language = list(zeroRecords = "No flights to display",
                                             search = "Search (city, flight number or airline):")))
   
-  #Creating a reactive object, which will be updated every 3 minutes with data from
-  #Avinor through running the function to get the data at a set interval
+  # Creating a reactive object, which will be updated every 3 minutes with data from
+  # Avinor by running the function get_final_df to get the data at a set interval.
+  # On first launch of the app, the already existing final_df object is used in the reactive
+  # object. Then, after three minutes, the reactive object is updated with new data
+  # by running the function again.
+  
   final_dfReactive <-  reactive({
     invalidateLater(180000)
-    if (first_run < 2){
+    if (first_run < 2) {
       first_run <<- first_run + 1
       return(final_df)
-    } else{
+    } else {
       shinyalert(
-        title = "Updating data", text = "This may take a few seconds", type = "info",
-        closeOnClickOutside = TRUE, animation = TRUE, timer = 5000,
+        title = "Updating data", 
+        text = "This may take a few seconds", 
+        type = "info",
+        closeOnClickOutside = TRUE, 
+        animation = TRUE, 
+        timer = 5000,
         showConfirmButton = FALSE
       )
       create_final_df()
     }
   })
   
-  #default table output
+  # Default table output for arrivals
   output$table1 <- renderDataTable({
     final_dfReactive() %>%
+      # Showing only data from the airport selected
       filter(origin == as.character(
         avinor_df[(avinor_df$airport_name == input$airport), ][1])) %>% 
       filter(arr_dep == "A") %>% 
@@ -126,6 +147,7 @@ server <- function(input, output) {
                  "D"
                }) %>%
       filter(scheduled_date == input$date) %>%
+      # Showing data from now -1 hour if the dateinput = date today, showing all data otherwise
       filter(
         if(input$date == Sys.Date()){
           scheduled_time >= chron::times(str_sub(Sys.time()-1*60*60, 12))
@@ -138,8 +160,12 @@ server <- function(input, output) {
              "From airport" = airport_name,
              "Belt" = belt_html,
              "Flight" = flight_html)
+    
+    # Setting escape = FALSE to allow the html-code formatted in the columns to be
+    # displayed as html. Also removing the rownames
   }, escape = FALSE, rownames = FALSE)
   
+  # Default table output for departures
   output$table2 <- renderDataTable({
     final_dfReactive() %>%
       filter(origin == as.character(
@@ -169,7 +195,7 @@ server <- function(input, output) {
     
   }, escape = FALSE, rownames = FALSE)
   
-  #### If the show earlier flights button is clicked ####
+  # If the show earlier flights button is clicked, time filter is removed
   observeEvent(
     input$viewButton,{
       output$table1 <- renderDataTable({
@@ -218,6 +244,7 @@ server <- function(input, output) {
       show("resetviewButton")
     })
   
+  #If the Hide earlier flights button is clicked, add the time filter back again
   observeEvent(
     input$resetviewButton,{
       output$table1 <- renderDataTable({
