@@ -36,7 +36,7 @@ ui <- fluidPage(
       
       
       checkboxGroupInput(inputId = "domint",
-                         label = "Domestic / International",
+                         label = "Select flights",
                          choices = c("Domestic", "International"),
                          selected = NULL),
       
@@ -152,8 +152,7 @@ server <- function(input, output) {
       filter(
         if(input$date == Sys.Date()){
           scheduled_time >= chron::times(str_sub(Sys.time()-1*60*60, 12))
-        }
-        else{
+        } else {
           scheduled_time >= chron::times(00:00:00)
         }) %>%
       select(updated_flightstatus ,airport_name, flight_html ,belt_html) %>% 
@@ -182,10 +181,9 @@ server <- function(input, output) {
                }) %>%
       filter(scheduled_date == input$date) %>%
       filter(
-        if(input$date == Sys.Date()){
+        if(input$date == Sys.Date()) {
           scheduled_time >= chron::times(stringr::str_sub(Sys.time()-1*60*60, 12))
-        }
-        else{
+        } else {
           scheduled_time >= chron::times(00:00:00)
         }) %>%
       select(updated_flightstatus, airport_name ,flight_html ,gate_html) %>%
@@ -263,10 +261,9 @@ server <- function(input, output) {
                    }) %>%
           filter(scheduled_date == input$date) %>%
           filter(
-            if(input$date == Sys.Date()){
+            if(input$date == Sys.Date()) {
               scheduled_time >= chron::times(str_sub(Sys.time()-1*60*60, 12))
-            }
-            else{
+            } else {
               scheduled_time >= chron::times(00:00:00)
             }) %>%
           select(updated_flightstatus ,airport_name, flight_html ,belt_html) %>% 
@@ -291,10 +288,9 @@ server <- function(input, output) {
                    }) %>%
           filter(scheduled_date == input$date) %>%
           filter(
-            if(input$date == Sys.Date()){
+            if(input$date == Sys.Date()) {
               scheduled_time >= chron::times(stringr::str_sub(Sys.time()-1*60*60, 12))
-            }
-            else{
+            } else {
               scheduled_time >= chron::times(00:00:00)
             }) %>%
           select(updated_flightstatus, airport_name ,flight_html ,gate_html) %>%
