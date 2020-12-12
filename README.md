@@ -8,7 +8,7 @@ The final product should look something like this:
 
 
 ## Flight Data
-### Intallation:
+#### Intallation:
 This script depends on some packeges. As the data from Avinor are in XML format, we use some packeges that gives us the opportunity to reed this data. To run the script one therefor need to install:
 
     install.packeged("XML")
@@ -24,13 +24,18 @@ For formating data and structuring the script, functions provided by tidyverse h
 
     install.packeged("tidyverse")
 
-
-
-    install.packeged("stringr")
-
-The script produces docstrings, descriptions to the functions created, and for this there are need for this:
+The script produces docstrings, descriptions to the functions created, and for this there are need for these:
 
     install.packeged("docstringr")
+    install.packeged("stringr")
+
+#### Collecting data
+
+
+#### Formating
+
+
+##### Final_df
 
 
 ## Shiny
