@@ -200,7 +200,8 @@ create_final_df <- function(){
       updated_time_html = paste0(str_sub(updated_time,1,5)),
       
       flight_id_html = paste0("<b>",flight_id,"</b>")) %>% 
-      unite(updated_timestatus, c(status_text_EN, updated_time_html),
+    
+    unite(updated_timestatus, c(status_text_EN, updated_time_html),
           sep = " ", remove = FALSE, na.rm = TRUE) %>%
     
     unite(updated_flightstatus, c(scheduled_time_html, updated_timestatus),
