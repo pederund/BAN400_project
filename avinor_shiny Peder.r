@@ -96,9 +96,9 @@ server <- function(input, output) {
   
   hide("resetviewButton")
   
-  #setting the number of rows shown and only showing the table, filtering-box 
-  #and also keep pagination control. Also removing the option to order columns.
-  #As well as changing the text in some instances.
+  # Setting the number of rows shown and only showing the table, filtering-box 
+  # and also keep pagination control. Also removing the option to order columns.
+  # As well as changing the text in some instances.
   options(DT.options = list(pageLength = 30, 
                             dom = "ftp",
                             ordering = FALSE,
@@ -244,7 +244,7 @@ server <- function(input, output) {
       show("resetviewButton")
     })
   
-  #If the Hide earlier flights button is clicked, add the time filter back again
+  # If the Hide earlier flights button is clicked, add the time filter back again
   observeEvent(
     input$resetviewButton,{
       output$table1 <- renderDataTable({
