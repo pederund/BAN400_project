@@ -1,3 +1,4 @@
+source("flight_data.R")
 library(shiny)
 library(shinyjs)
 library(shinythemes)
