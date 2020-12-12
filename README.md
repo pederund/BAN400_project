@@ -16,20 +16,21 @@ This script depends on some packeges. As the data from Avinor are in XML format,
     install.packeged("RCurl")
 
 Further the script uses these packeges to format and read time and date:
+
     install.packeged("lubridate")
     install.packeged("chron")
 
-
+For formating data and structuring the script, functions provided by tidyverse have been used: 
 
     install.packeged("tidyverse")
 
 
 
     install.packeged("stringr")
+
+The script produces docstrings, descriptions to the functions created, and for this there are need for this:
+
     install.packeged("docstringr")
-
-
-
 
 
 ## Shiny
