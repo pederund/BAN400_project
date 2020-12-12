@@ -55,6 +55,12 @@ When creating the app some packeges are necessary for running the app and when d
 #### Input
 The Shiny app-function has to inputs. The user interface (ui) and the presented data (server). THe script creates this ui first:
 
+###### User interface
+In this data frame we construtes a fluid page. The layout theme is selected as "yeti", this provides the colours and styling needed to replicate the Avinor's 
+own homepage. 
+"shinyjs"??????
+As the data is collected every third minute, tha app needs to berefreshed with the same interval. Therefor there have been added an alert, by using the shinyalert function, 
+to 
 
 
 
