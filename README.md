@@ -9,9 +9,24 @@ The final product should look something like this:
 
 ## Flight Data
 ### Intallation:
-This script depends on some packeges. As the data from Avinor in XML format, we use some packeges that gives us the opportunity to reed this data. To run the script one therefor need to install these:
+This script depends on some packeges. As the data from Avinor are in XML format, we use some packeges that gives us the opportunity to reed this data. To run the script one therefor need to install:
 
-    install.packeged("")
+    install.packeged("XML")
+    install.packeged("xml2")
+    install.packeged("RCurl")
+
+Further the script uses these packeges to format and read time and date:
+    install.packeged("lubridate")
+    install.packeged("chron")
+
+
+
+    install.packeged("tidyverse")
+
+
+
+    install.packeged("stringr")
+    install.packeged("docstringr")
 
 
 
