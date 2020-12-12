@@ -9,7 +9,9 @@ The final product should look something like this:
 
 ## Flight Data
 ### Intallation:
+This script depends on some packeges. As the data from Avinor in XML format, we use some packeges that gives us the opportunity to reed this data. To run the script one therefor need to install these:
 
+> install.packeged("")
 
 
 
