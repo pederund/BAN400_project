@@ -40,6 +40,21 @@ The script produces docstrings, descriptions to the functions created, and for t
 
 ## Shiny
 
+Now as the data is collected and ... we will create the Shiny app by using the packeges provided by Shiny. 
+#### Installation
+When creating the app some packeges are necessary for running the app and designing the layout: 
+
+    install.packeged("shiny")
+    install.packeged("shinyjs")
+    install.packeged("shinythemes")
+    install.packeged("shinyalert")
+    install.packeged("stringr")
+    install.packeged("DT")
+
+
+
+
+
 
 
 
