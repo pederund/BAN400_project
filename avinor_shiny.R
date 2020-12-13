@@ -1,4 +1,6 @@
+
 source("flight_data.R")
+
 library(shiny)
 library(shinyjs)
 library(shinythemes)
@@ -84,7 +86,7 @@ ui <- fluidPage(
   thead {background-color:#f0f1f3;} 
   tbody tr {background-color:white !important}
   .dataTables_wrapper {background-color: #f0f1f3;}
-  .tabbable > .nav > li[class=active]  > a {background-color:#f0f1f3;   color:black}
+  .tabbable > .nav > li[class=active]  > a {background-color:#f0f1f3;color:black}
   .tabbable > .nav > li > a {color:black; width: 35vw !important;} 
   "
   ))
@@ -100,12 +102,13 @@ server <- function(input, output) {
   # Setting the number of rows shown and only showing the table, filtering-box 
   # and also keep pagination control. Also removing the option to order columns.
   # As well as changing the text in some instances.
-  options(DT.options = list(pageLength = 30, 
-                            dom = "ftp",
-                            ordering = FALSE,
-                            searchHighlight = TRUE,
-                            language = list(zeroRecords = "No flights to display",
-                                            search = "Search (city, flight number or airline):")))
+  options(
+    DT.options = list(pageLength = 30, 
+                      dom = "ftp",
+                      ordering = FALSE,
+                      searchHighlight = TRUE,
+                      language = list(zeroRecords = "No flights to display",
+                                      search = "Search (city, flight number or airline):")))
   
   # Creating a reactive object, which will be updated every 3 minutes with data from
   # Avinor by running the function get_final_df to get the data at a set interval.
@@ -148,7 +151,8 @@ server <- function(input, output) {
                  "D"
                }) %>%
       filter(scheduled_date == input$date) %>%
-      # Showing data from now -1 hour if the dateinput = date today, showing all data otherwise
+      # Showing data from now (t = 0) to t = -1 hour if the dateinput = date today, 
+      # showing all data otherwise
       filter(
         if(input$date == Sys.Date()){
           scheduled_time >= chron::times(str_sub(Sys.time()-1*60*60, 12))
