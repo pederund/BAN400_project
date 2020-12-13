@@ -1,4 +1,3 @@
-
 source("flight_data.R")
 
 library(shiny)
@@ -28,6 +27,7 @@ ui <- fluidPage(
   
   sidebarLayout(
     sidebarPanel(
+      # Defining what will be shown in the sidebar in the app
       
       helpText('Data will be automatically updated every three minutes.'),
       
@@ -55,6 +55,7 @@ ui <- fluidPage(
       width = 3),
     
     mainPanel(
+      # Defining what will be in the main panel of the app
       actionButton(inputId = "viewButton", 
                    label = "Show earlier flights",
                    style = "color: white; background-color: #84216b;

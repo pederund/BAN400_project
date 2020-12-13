@@ -111,7 +111,7 @@ get_flightdata <- function(xml_data, origin){
   test_df <- 
     XML:::xmlAttrsToDataFrame(getNodeSet(data, ("//flight")))
   
-  #If there is no data for the given airport, do nothing
+  #If there is data for the given airport, do the following
   if(nrow(test_df != 0)) {
     # Getting the status code and status time for each unique flight-id
     # This is done due to the "status" column from the XML-data containing two values.
@@ -136,7 +136,7 @@ get_flightdata <- function(xml_data, origin){
     
     return(full_df)
   } else { 
-    
+    #Do nothing if there is no data
   }
   
 
