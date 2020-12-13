@@ -8,10 +8,10 @@ In this project we have collected real time flight data and created a shiny app 
 The final product should look something like this:
 
 ###### Arrivals from Oslo airport
-![Image of Shiny App](https://github.com/pederund/BAN400_project/blob/main/shiny_arrival_example.png)
+![Image of Shiny App](https://github.com/pederund/BAN400_project/blob/main/shiny_arrival_example.PNG)
 
 ###### Departures from Oslo airport
-![Image of Shiny App](https://github.com/pederund/BAN400_project/blob/main/shiny_departure_example.png)
+![Image of Shiny App](https://github.com/pederund/BAN400_project/blob/main/shiny_departure_example.PNG)
 
 ## Flight Data
 #### Intallation:
