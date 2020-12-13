@@ -42,21 +42,6 @@ When creating the app some packages are necessary for running the app and when d
     install.packages("shinyalert")
     install.packages("DT")
 
-#### Input
-The Shiny app-function has two inputs. The user interface (ui) and the presented data (server). The script creates this ui first:
-
 ###### User interface
-In this data frame we construct a fluid page. The layout theme is selected as "yeti", this provides the colors and styling needed to replicate Avinor's own homepage. 
-
-"shinyjs"?????? 
-
-As the data is collected every third minute, the app needs to be refreshed with the same time interval. Therefore there have been added an alert, by using the shinyalert function, to give the user a warning when this is happening. The input for the alert is added in “server”, as we only initiate the alert here. 
-
-Furter, the code provides some helpful information for the user of the app, filtering opportunities in the side panel and a main panel with the data table. On top of the main table the “tabsetPanel” produces a tabset, so the user can choose if he or she wants to see departures or arrivals. The syntax “actionButton” produces a button that allows the user to choose if (s)he wants to see only the flights from one hour back in time and further into the future, or all the past flights. 
-
-
-
-
-
-
-
+In the app's user interface, the user is allowed to select airports directly and intuitively from a drop-down menu. Further, the user is allowed to fiter flights based on whether a flight is domestic of international, or both at the same time - which is the default. The user is also allowed to filter flights based on date. Due to only having access to data which is +- 24 hours from any given time, the user can only see flights for the current, previous and the next day.
+ 
