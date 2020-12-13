@@ -42,7 +42,7 @@ When creating the app some packages are necessary for running the app and when d
     install.packages("shinyalert")
     install.packages("DT")
 
-###### User interface
+#### User interface
 The user is allowed to select airports directly and intuitively from a drop-down menu. Further, the user is allowed to filter flights based on whether a flight is domestic or international, or both at the same time - which is the default. The user is also allowed to filter flights based on date. Due to only having access to data which is +- 24 hours from any given time, the user can only see flights for the current, previous and the next day.
  
 The data presented to the user will be automatically updated every three minutes while the app is running, the user will be prompted with a informational alert when this happens. The data is updated every three minutes, this is due to that according to Avinor, the data should be updated in this interval to make sure that the end user has the correct and updated data. Updating the data more frequent than every three minutes should not be necessary.
