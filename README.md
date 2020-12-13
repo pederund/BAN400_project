@@ -13,23 +13,14 @@ The final product should look something like this:
 
 ## Flight Data
 #### Intallation:
-This script depends on some packages. As the data from Avinor are in XML format, we use some packages that allow us to read this data. To run the script one therefor need to install:
+This script depends on some packages. To run the script, please make sure to install the following packages:
 
     install.packages("XML")
     install.packages("xml2")
     install.packages("RCurl")
-
-Further the script uses these packages to format and read time and date:
-
     install.packages("lubridate")
     install.packages("chron")
-
-For formating data and structuring the script, functions provided by tidyverse have been used:
-
     install.packages("tidyverse")
-
-The script produces docstrings, descriptions to the functions created, and for this there are need for these:
-
     install.packages("docstringr")
     install.packages("stringr")
 
@@ -43,13 +34,12 @@ The structure of the source script is to first get all “static” data into an
 ## Shiny
 
 #### Installation
-When creating the app some packages are necessary for running the app and when designing the layout:
+When creating the app some packages are necessary for running the app and when designing the layout. Please make sure to have these installed prior to running the code:
 
     install.packages("shiny")
     install.packages("shinyjs")
     install.packages("shinythemes")
     install.packages("shinyalert")
-    install.packages("stringr")
     install.packages("DT")
 
 #### Input
